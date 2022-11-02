@@ -123,7 +123,7 @@ class SplitProvider(provider.AbstractProvider):
             raise exceptions.TargetingKeyMissingError("Missing targeting key")
 
         attributes = SplitProvider.transform_context(evaluation_context)
-        return self.split_client.get_treatment(key, targeting_key, attributes)
+        return self.split_client.get_treatment(targeting_key, key, attributes)
 
     @staticmethod
     def transform_context(

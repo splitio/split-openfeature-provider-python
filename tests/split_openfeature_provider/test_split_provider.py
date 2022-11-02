@@ -16,18 +16,6 @@ class TestProvider(object):
     def mock_client_return(self, val):
         self.client.get_treatment.return_value = val
 
-    # commented out until Split SDK bug is fixed
-    # def test_fail_with_bad_api_key():
-    #     try:
-    #         provider = SplitProvider(api_key="someKey")
-    #         fail("Should have thrown an exception")
-    #     except exceptions.GeneralError as e:
-    #         # assert true
-    #         assert e.error_message == "Error occurred initializing the client."
-    #     except Exception:
-    #         # fail
-    #         fail("Unexpected exception occurred. Expected a GeneralError.")
-
     # *** Boolean eval tests ***
 
     def test_boolean_none_empty(self):
