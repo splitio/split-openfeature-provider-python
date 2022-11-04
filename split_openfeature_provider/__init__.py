@@ -1,0 +1,1 @@
+from split_openfeature_provider.split_provider import SplitProvider

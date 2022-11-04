@@ -4,7 +4,7 @@ from open_feature.evaluation_context.evaluation_context import EvaluationContext
 from open_feature.exception import exceptions
 from open_feature.flag_evaluation.reason import Reason
 from splitio import get_factory
-from split_openfeature_provider.split_provider import SplitProvider
+from split_openfeature_provider import SplitProvider
 
 
 class TestClient(object):
