@@ -18,7 +18,7 @@ class TestClient(object):
 
     @pytest.fixture
     def provider(self):
-        factory = get_factory("localhost", config={"splitFile": "split_openfeature_provider/split.yaml"})
+        factory = get_factory("localhost", config={"splitFile": "split.yaml"})
         factory.block_until_ready(5)
         return SplitProvider(client=factory.client())
 
