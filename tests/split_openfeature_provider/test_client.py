@@ -32,7 +32,7 @@ class TestClient(object):
 
     @pytest.fixture(autouse=True)
     def targeting_key(self, client):
-        client.set_evaluation_context(EvaluationContext(targeting_key="key"))
+        client.context = EvaluationContext(targeting_key="key")
 
     def test_use_default(self, client):
         # flags that do not exist should return the default value
@@ -58,7 +58,7 @@ class TestClient(object):
     def test_missing_targeting_key(self, client):
         # Split requires a targeting key and should return the default treatment
         # and throw an error if not provided
-        client.set_evaluation_context(EvaluationContext())
+        client.context = EvaluationContext()
         details = client.get_boolean_details("non-existent-feature", False)
         assert not details.value
         assert details.error_code == exceptions.ErrorCode.TARGETING_KEY_MISSING
