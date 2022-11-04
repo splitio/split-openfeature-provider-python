@@ -2,7 +2,7 @@ from pytest import fail
 from mock import MagicMock
 from open_feature.exception import exceptions
 from open_feature.evaluation_context.evaluation_context import EvaluationContext
-from split_openfeature_provider import SplitProvider
+from split_openfeature import SplitProvider
 
 
 class TestProvider(object):
