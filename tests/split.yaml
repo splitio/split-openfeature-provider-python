@@ -8,5 +8,7 @@
     treatment: "off"
 - int_feature:
     treatment: "32"
+- float_feature:
+      treatment: "50.5"
 - obj_feature:
     treatment: "{\"key\": \"value\"}"

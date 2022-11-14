@@ -1,7 +1,7 @@
 import pytest
 from open_feature import open_feature_api
 from open_feature.evaluation_context.evaluation_context import EvaluationContext
-from open_feature.exception import exceptions
+from open_feature.exception.error_code import ErrorCode
 from open_feature.flag_evaluation.reason import Reason
 from splitio import get_factory
 from split_openfeature import SplitProvider
@@ -13,8 +13,8 @@ class TestClient(object):
     my_feature = "my_feature"  # 'on' when targeting_key='key', else 'off'
     some_other_feature = "some_other_feature"  # 'off'
     int_feature = "int_feature"  # '32'
+    float_feature = "float_feature"  # '50.5'
     obj_feature = "obj_feature"  # '{\"key\": \"value\"}'
-
 
     @pytest.fixture
     def provider(self):
@@ -47,9 +47,13 @@ class TestClient(object):
         result = client.get_string_value(flag_name, default_string)
         assert result == default_string
 
-        default_num = 100
-        result = client.get_number_value(flag_name, default_num)
-        assert result == default_num
+        default_int = 100
+        result = client.get_integer_value(flag_name, default_int)
+        assert result == default_int
+
+        default_float = 100.5
+        result = client.get_float_value(flag_name, default_float)
+        assert result == default_float
 
         default_obj = {"foo": "bar"}
         result = client.get_object_value(flag_name, default_obj)
@@ -61,7 +65,7 @@ class TestClient(object):
         client.context = EvaluationContext()
         details = client.get_boolean_details("non-existent-feature", False)
         assert not details.value
-        assert details.error_code == exceptions.ErrorCode.TARGETING_KEY_MISSING
+        assert details.error_code == ErrorCode.TARGETING_KEY_MISSING
 
     def test_control_variant_non_existent_split(self, client):
         # split returns a treatment = "control" if the flag is not found.
@@ -70,7 +74,7 @@ class TestClient(object):
         details = client.get_boolean_details("non-existent-feature", False)
         assert not details.value
         assert details.variant == "control"
-        assert details.error_code == exceptions.ErrorCode.FLAG_NOT_FOUND
+        assert details.error_code == ErrorCode.FLAG_NOT_FOUND
 
     def test_boolean_split(self, client):
         # This should be false as defined as "off" in the split.yaml
@@ -91,9 +95,13 @@ class TestClient(object):
         result = client.get_string_value(self.some_other_feature, "on")
         assert result == "off"
 
-    def test_num_split(self, client):
-        result = client.get_number_value(self.int_feature, 0)
+    def test_int_split(self, client):
+        result = client.get_integer_value(self.int_feature, 0)
         assert result == 32
+
+    def test_float_split(self, client):
+        result = client.get_float_value(self.float_feature, 2.3)
+        assert result == 50.5
 
     def test_obj_split(self, client):
         result = client.get_object_value(self.obj_feature, {})
@@ -111,12 +119,20 @@ class TestClient(object):
         assert details.variant == "off"
         assert details.error_code is None
 
-    def test_num_details(self, client):
-        details = client.get_number_details(self.int_feature, 0)
+    def test_int_details(self, client):
+        details = client.get_integer_details(self.int_feature, 0)
         assert details.flag_key == self.int_feature
         assert details.reason == Reason.TARGETING_MATCH
         assert details.value == 32
         assert details.variant == "32"
+        assert details.error_code is None
+
+    def test_float_details(self, client):
+        details = client.get_float_details(self.float_feature, 2.3)
+        assert details.flag_key == self.float_feature
+        assert details.reason == Reason.TARGETING_MATCH
+        assert details.value == 50.5
+        assert details.variant == "50.5"
         assert details.error_code is None
 
     def test_string_details(self, client):
@@ -142,18 +158,29 @@ class TestClient(object):
 
         details = client.get_boolean_details(self.obj_feature, False)
         assert not details.value
-        assert details.error_code == exceptions.ErrorCode.PARSE_ERROR
+        assert details.error_code == ErrorCode.PARSE_ERROR
         assert details.reason == Reason.ERROR
         assert details.variant is None
 
-    def test_number_fail(self, client):
-        # attempt to fetch an object treatment as a number. Should result in the default
-        value = client.get_number_value(self.obj_feature, 10)
+    def test_int_fail(self, client):
+        # attempt to fetch an object treatment as an int. Should result in the default
+        value = client.get_integer_value(self.obj_feature, 10)
         assert value == 10
 
-        details = client.get_number_details(self.obj_feature, 10)
+        details = client.get_integer_details(self.obj_feature, 10)
         assert details.value == 10
-        assert details.error_code == exceptions.ErrorCode.PARSE_ERROR
+        assert details.error_code == ErrorCode.PARSE_ERROR
+        assert details.reason == Reason.ERROR
+        assert details.variant is None
+
+    def test_float_fail(self, client):
+        # attempt to fetch an object treatment as an int. Should result in the default
+        value = client.get_float_value(self.obj_feature, 2.3)
+        assert value == 2.3
+
+        details = client.get_float_details(self.obj_feature, 2.3)
+        assert details.value == 2.3
+        assert details.error_code == ErrorCode.PARSE_ERROR
         assert details.reason == Reason.ERROR
         assert details.variant is None
 
@@ -165,6 +192,6 @@ class TestClient(object):
 
         details = client.get_object_details(self.some_other_feature, default_treatment)
         assert details.value == default_treatment
-        assert details.error_code == exceptions.ErrorCode.PARSE_ERROR
+        assert details.error_code == ErrorCode.PARSE_ERROR
         assert details.reason == Reason.ERROR
         assert details.variant is None

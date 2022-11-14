@@ -1,11 +1,13 @@
+import typing
 from json import JSONDecodeError
 
+from open_feature.hooks.hook import Hook
 from open_feature.provider import provider
 from open_feature.evaluation_context.evaluation_context import EvaluationContext
 from open_feature.exception import exceptions
+from open_feature.exception.error_code import ErrorCode
 from open_feature.flag_evaluation.reason import Reason
 from open_feature.flag_evaluation.flag_evaluation_details import FlagEvaluationDetails
-from numbers import Number
 from splitio import get_factory
 from splitio.exceptions import TimeoutException
 import json
@@ -29,16 +31,16 @@ class SplitProvider(provider.AbstractProvider):
     def get_metadata(self) -> provider.Metadata:
         return provider.Metadata("Split")
 
-    def get_boolean_details(
-        self,
-        flag_key: str,
-        default_value: bool,
-        evaluation_context: EvaluationContext = EvaluationContext()
-    ):
+    def get_provider_hooks(self) -> typing.List[Hook]:
+        return []
+
+    def resolve_boolean_details(self, flag_key: str, default_value: bool,
+                                evaluation_context: EvaluationContext = EvaluationContext()):
         try:
             evaluated = self.evaluate_treatment(flag_key, evaluation_context)
             if SplitProvider.no_treatment(evaluated):
-                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT, exceptions.ErrorCode.FLAG_NOT_FOUND)
+                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT,
+                                                                   ErrorCode.FLAG_NOT_FOUND)
             evaluated_lower = evaluated.lower()
             if evaluated_lower in ["true", "on"]:
                 value = True
@@ -52,54 +54,60 @@ class SplitProvider(provider.AbstractProvider):
         except Exception:
             raise exceptions.GeneralError("Error getting boolean evaluation")
 
-    def get_string_details(
-        self,
-        flag_key: str,
-        default_value: str,
-        evaluation_context: EvaluationContext = EvaluationContext()
-    ):
+    def resolve_string_details(self, flag_key: str, default_value: str,
+                               evaluation_context: EvaluationContext = EvaluationContext()):
         try:
             evaluated = self.evaluate_treatment(flag_key, evaluation_context)
             if SplitProvider.no_treatment(evaluated):
-                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT, exceptions.ErrorCode.FLAG_NOT_FOUND)
+                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT,
+                                                                   ErrorCode.FLAG_NOT_FOUND)
             return SplitProvider.construct_provider_evaluation(flag_key, evaluated, evaluated)
         except exceptions.OpenFeatureError:
             raise
         except Exception:
             raise exceptions.GeneralError("Error getting boolean evaluation")
 
-    def get_number_details(
-        self,
-        flag_key: str,
-        default_value: Number,
-        evaluation_context: EvaluationContext = EvaluationContext()
-    ):
+    def resolve_integer_details(self, flag_key: str, default_value: int,
+                                evaluation_context: EvaluationContext = EvaluationContext()):
         try:
             evaluated = self.evaluate_treatment(flag_key, evaluation_context)
             if SplitProvider.no_treatment(evaluated):
-                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT, exceptions.ErrorCode.FLAG_NOT_FOUND)
+                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT,
+                                                                   ErrorCode.FLAG_NOT_FOUND)
             try:
                 value = int(evaluated)
             except ValueError:
-                value = float(evaluated)
+                raise exceptions.ParseError("Could not convert treatment to integer")
             return SplitProvider.construct_provider_evaluation(flag_key, value, evaluated)
-        except ValueError:
-            raise exceptions.ParseError("Could not convert treatment to number")
         except exceptions.OpenFeatureError:
             raise
         except Exception:
             raise exceptions.GeneralError("Error getting boolean evaluation")
 
-    def get_object_details(
-        self,
-        flag_key: str,
-        default_value: dict,
-        evaluation_context: EvaluationContext = EvaluationContext()
-    ):
+    def resolve_float_details(self, flag_key: str, default_value: float,
+                              evaluation_context: EvaluationContext = EvaluationContext()):
         try:
             evaluated = self.evaluate_treatment(flag_key, evaluation_context)
             if SplitProvider.no_treatment(evaluated):
-                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT, exceptions.ErrorCode.FLAG_NOT_FOUND)
+                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT,
+                                                                   ErrorCode.FLAG_NOT_FOUND)
+            try:
+                value = float(evaluated)
+            except ValueError:
+                raise exceptions.ParseError("Could not convert treatment to float")
+            return SplitProvider.construct_provider_evaluation(flag_key, value, evaluated)
+        except exceptions.OpenFeatureError:
+            raise
+        except Exception:
+            raise exceptions.GeneralError("Error getting boolean evaluation")
+
+    def resolve_object_details(self, flag_key: str, default_value: dict,
+                               evaluation_context: EvaluationContext = EvaluationContext()):
+        try:
+            evaluated = self.evaluate_treatment(flag_key, evaluation_context)
+            if SplitProvider.no_treatment(evaluated):
+                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT,
+                                                                   ErrorCode.FLAG_NOT_FOUND)
             value = json.loads(evaluated)
             return SplitProvider.construct_provider_evaluation(flag_key, value, evaluated)
         except JSONDecodeError:
@@ -111,10 +119,7 @@ class SplitProvider(provider.AbstractProvider):
 
     # *** --- Helpers --- ***
 
-    def evaluate_treatment(
-            self,
-            key: str,
-            evaluation_context: EvaluationContext):
+    def evaluate_treatment(self, key: str, evaluation_context: EvaluationContext):
         if evaluation_context is None:
             raise exceptions.GeneralError("Evaluation Context must be provided for the Split Provider")
 
@@ -126,29 +131,15 @@ class SplitProvider(provider.AbstractProvider):
         return self.split_client.get_treatment(targeting_key, key, attributes)
 
     @staticmethod
-    def transform_context(
-            evaluation_context: EvaluationContext
-    ):
+    def transform_context(evaluation_context: EvaluationContext):
         return evaluation_context.attributes
 
     @staticmethod
-    def no_treatment(
-            treatment: str
-    ):
+    def no_treatment(treatment: str):
         return not treatment or treatment == "control"
 
     @staticmethod
-    def construct_provider_evaluation(
-            key: str,
-            value,
-            variant: str,
-            reason: Reason = Reason.TARGETING_MATCH,
-            error_code: exceptions.ErrorCode = None
-    ):
-        return FlagEvaluationDetails(
-            flag_key=key,
-            value=value,
-            reason=reason,
-            error_code=error_code,
-            variant=variant
-        )
+    def construct_provider_evaluation(key: str, value, variant: str, reason: Reason = Reason.TARGETING_MATCH,
+                                      error_code: ErrorCode = None):
+        return FlagEvaluationDetails(flag_key=key, value=value, reason=reason,
+                                     error_code=error_code, variant=variant)
