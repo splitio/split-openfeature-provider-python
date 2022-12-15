@@ -1,0 +1,2 @@
+openfeature_sdk==0.0.6
+splitio_client==9.1.3
