@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="split_openfeature",
-    version="0.0.1",
+    version="0.1.0",
     author="Robert Grassian",
     author_email="robert.grassian@split.io",
     description="The official Python Split Provider for OpenFeature",
