@@ -1,8 +1,7 @@
 from pytest import fail
 from mock import MagicMock
-from open_feature.exception import exceptions
-from open_feature.exception.error_code import ErrorCode
-from open_feature.evaluation_context.evaluation_context import EvaluationContext
+from openfeature.exception import ErrorCode, OpenFeatureError
+from openfeature.evaluation_context import EvaluationContext
 from split_openfeature import SplitProvider
 
 
@@ -75,7 +74,7 @@ class TestProvider(object):
         try:
             self.provider.resolve_boolean_details(self.flag_name, False, self.eval_context)
             fail("Should have thrown an error casting string to boolean")
-        except exceptions.OpenFeatureError as e:
+        except OpenFeatureError as e:
             assert e.error_code == ErrorCode.PARSE_ERROR
         except Exception:
             fail("Unexpected exception occurred")
@@ -150,7 +149,7 @@ class TestProvider(object):
         try:
             self.provider.resolve_integer_details(self.flag_name, 100, self.eval_context)
             fail("Should have thrown an exception casting string to num")
-        except exceptions.OpenFeatureError as e:
+        except OpenFeatureError as e:
             assert e.error_code == ErrorCode.PARSE_ERROR
         except Exception:
             fail("Unexpected exception occurred")
@@ -159,7 +158,7 @@ class TestProvider(object):
         try:
             self.provider.resolve_integer_details(self.flag_name, 100, self.eval_context)
             fail("Should have thrown an exception casting string to int")
-        except exceptions.OpenFeatureError as e:
+        except OpenFeatureError as e:
             assert e.error_code == ErrorCode.PARSE_ERROR
         except Exception:
             fail("Unexpected exception occurred")
@@ -207,7 +206,7 @@ class TestProvider(object):
         try:
             self.provider.resolve_float_details(self.flag_name, 100.5, self.eval_context)
             fail("Should have thrown an exception casting string to float")
-        except exceptions.OpenFeatureError as e:
+        except OpenFeatureError as e:
             assert e.error_code == ErrorCode.PARSE_ERROR
         except Exception:
             fail("Unexpected exception occurred")
@@ -255,7 +254,7 @@ class TestProvider(object):
         try:
             self.provider.resolve_object_details(self.flag_name, {"foo": "bar"}, self.eval_context)
             fail("Should have thrown an exception casting string to an object")
-        except exceptions.OpenFeatureError as e:
+        except OpenFeatureError as e:
             assert e.error_code == ErrorCode.PARSE_ERROR
         except Exception:
             fail("Unexpected exception occurred")

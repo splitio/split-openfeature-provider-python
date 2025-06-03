@@ -1,2 +1,2 @@
-openfeature_sdk==0.0.6
+openfeature_sdk==0.8.1
 splitio_client==10.2.0

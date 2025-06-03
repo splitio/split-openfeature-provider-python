@@ -1,19 +1,17 @@
 import typing
 from json import JSONDecodeError
 
-from open_feature.hooks.hook import Hook
-from open_feature.provider import provider
-from open_feature.evaluation_context.evaluation_context import EvaluationContext
-from open_feature.exception import exceptions
-from open_feature.exception.error_code import ErrorCode
-from open_feature.flag_evaluation.reason import Reason
-from open_feature.flag_evaluation.flag_evaluation_details import FlagEvaluationDetails
+from openfeature.hook import Hook
+from openfeature.evaluation_context import EvaluationContext
+from openfeature.exception import ErrorCode, GeneralError, ParseError, OpenFeatureError, TargetingKeyMissingError
+from openfeature.flag_evaluation import Reason, FlagResolutionDetails
+from openfeature.provider import AbstractProvider, Metadata
 from splitio import get_factory
 from splitio.exceptions import TimeoutException
 import json
 
 
-class SplitProvider(provider.AbstractProvider):
+class SplitProvider(AbstractProvider):
 
     def __init__(self, api_key="", client=None):
         if api_key == "" and client is None:
@@ -23,13 +21,13 @@ class SplitProvider(provider.AbstractProvider):
             try:
                 factory.block_until_ready(1)
             except TimeoutException:
-                raise exceptions.GeneralError("Error occurred initializing the client.")
+                raise GeneralError("Error occurred initializing the client.")
             self.split_client = factory.client()
         else:
             self.split_client = client
 
-    def get_metadata(self) -> provider.Metadata:
-        return provider.Metadata("Split")
+    def get_metadata(self) -> Metadata:
+        return Metadata("Split")
 
     def get_provider_hooks(self) -> typing.List[Hook]:
         return []
@@ -39,93 +37,93 @@ class SplitProvider(provider.AbstractProvider):
         try:
             evaluated = self.evaluate_treatment(flag_key, evaluation_context)
             if SplitProvider.no_treatment(evaluated):
-                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT,
-                                                                   ErrorCode.FLAG_NOT_FOUND)
+                return SplitProvider.construct_flag_resolution(default_value, evaluated, Reason.DEFAULT,
+                                                               ErrorCode.FLAG_NOT_FOUND)
             evaluated_lower = evaluated.lower()
             if evaluated_lower in ["true", "on"]:
                 value = True
             elif evaluated_lower in ["false", "off"]:
                 value = False
             else:
-                raise exceptions.ParseError("Could not convert treatment to boolean")
-            return SplitProvider.construct_provider_evaluation(flag_key, value, evaluated)
-        except exceptions.OpenFeatureError:
+                raise ParseError("Could not convert treatment to boolean")
+            return SplitProvider.construct_flag_resolution(value, evaluated)
+        except OpenFeatureError:
             raise
         except Exception:
-            raise exceptions.GeneralError("Error getting boolean evaluation")
+            raise GeneralError("Error getting boolean evaluation")
 
     def resolve_string_details(self, flag_key: str, default_value: str,
                                evaluation_context: EvaluationContext = EvaluationContext()):
         try:
             evaluated = self.evaluate_treatment(flag_key, evaluation_context)
             if SplitProvider.no_treatment(evaluated):
-                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT,
-                                                                   ErrorCode.FLAG_NOT_FOUND)
-            return SplitProvider.construct_provider_evaluation(flag_key, evaluated, evaluated)
-        except exceptions.OpenFeatureError:
+                return SplitProvider.construct_flag_resolution(default_value, evaluated, Reason.DEFAULT,
+                                                               ErrorCode.FLAG_NOT_FOUND)
+            return SplitProvider.construct_flag_resolution(evaluated, evaluated)
+        except OpenFeatureError:
             raise
         except Exception:
-            raise exceptions.GeneralError("Error getting boolean evaluation")
+            raise GeneralError("Error getting boolean evaluation")
 
     def resolve_integer_details(self, flag_key: str, default_value: int,
                                 evaluation_context: EvaluationContext = EvaluationContext()):
         try:
             evaluated = self.evaluate_treatment(flag_key, evaluation_context)
             if SplitProvider.no_treatment(evaluated):
-                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT,
-                                                                   ErrorCode.FLAG_NOT_FOUND)
+                return SplitProvider.construct_flag_resolution(default_value, evaluated, Reason.DEFAULT,
+                                                               ErrorCode.FLAG_NOT_FOUND)
             try:
                 value = int(evaluated)
             except ValueError:
-                raise exceptions.ParseError("Could not convert treatment to integer")
-            return SplitProvider.construct_provider_evaluation(flag_key, value, evaluated)
-        except exceptions.OpenFeatureError:
+                raise ParseError("Could not convert treatment to integer")
+            return SplitProvider.construct_flag_resolution(value, evaluated)
+        except OpenFeatureError:
             raise
         except Exception:
-            raise exceptions.GeneralError("Error getting boolean evaluation")
+            raise GeneralError("Error getting boolean evaluation")
 
     def resolve_float_details(self, flag_key: str, default_value: float,
                               evaluation_context: EvaluationContext = EvaluationContext()):
         try:
             evaluated = self.evaluate_treatment(flag_key, evaluation_context)
             if SplitProvider.no_treatment(evaluated):
-                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT,
-                                                                   ErrorCode.FLAG_NOT_FOUND)
+                return SplitProvider.construct_flag_resolution(default_value, evaluated, Reason.DEFAULT,
+                                                               ErrorCode.FLAG_NOT_FOUND)
             try:
                 value = float(evaluated)
             except ValueError:
-                raise exceptions.ParseError("Could not convert treatment to float")
-            return SplitProvider.construct_provider_evaluation(flag_key, value, evaluated)
-        except exceptions.OpenFeatureError:
+                raise ParseError("Could not convert treatment to float")
+            return SplitProvider.construct_flag_resolution(value, evaluated)
+        except OpenFeatureError:
             raise
         except Exception:
-            raise exceptions.GeneralError("Error getting boolean evaluation")
+            raise GeneralError("Error getting boolean evaluation")
 
     def resolve_object_details(self, flag_key: str, default_value: dict,
                                evaluation_context: EvaluationContext = EvaluationContext()):
         try:
             evaluated = self.evaluate_treatment(flag_key, evaluation_context)
             if SplitProvider.no_treatment(evaluated):
-                return SplitProvider.construct_provider_evaluation(flag_key, default_value, evaluated, Reason.DEFAULT,
-                                                                   ErrorCode.FLAG_NOT_FOUND)
+                return SplitProvider.construct_flag_resolution(default_value, evaluated, Reason.DEFAULT,
+                                                               ErrorCode.FLAG_NOT_FOUND)
             value = json.loads(evaluated)
-            return SplitProvider.construct_provider_evaluation(flag_key, value, evaluated)
+            return SplitProvider.construct_flag_resolution(value, evaluated)
         except JSONDecodeError:
-            raise exceptions.ParseError("Could not convert treatment to dict")
-        except exceptions.OpenFeatureError:
+            raise ParseError("Could not convert treatment to dict")
+        except OpenFeatureError:
             raise
         except Exception:
-            raise exceptions.GeneralError("Error getting boolean evaluation")
+            raise GeneralError("Error getting boolean evaluation")
 
     # *** --- Helpers --- ***
 
     def evaluate_treatment(self, key: str, evaluation_context: EvaluationContext):
         if evaluation_context is None:
-            raise exceptions.GeneralError("Evaluation Context must be provided for the Split Provider")
+            raise GeneralError("Evaluation Context must be provided for the Split Provider")
 
         targeting_key = evaluation_context.targeting_key
         if not targeting_key:
-            raise exceptions.TargetingKeyMissingError("Missing targeting key")
+            raise TargetingKeyMissingError("Missing targeting key")
 
         attributes = SplitProvider.transform_context(evaluation_context)
         return self.split_client.get_treatment(targeting_key, key, attributes)
@@ -139,7 +137,6 @@ class SplitProvider(provider.AbstractProvider):
         return not treatment or treatment == "control"
 
     @staticmethod
-    def construct_provider_evaluation(key: str, value, variant: str, reason: Reason = Reason.TARGETING_MATCH,
-                                      error_code: ErrorCode = None):
-        return FlagEvaluationDetails(flag_key=key, value=value, reason=reason,
-                                     error_code=error_code, variant=variant)
+    def construct_flag_resolution(value, variant: str, reason: Reason = Reason.TARGETING_MATCH,
+                                  error_code: ErrorCode = None):
+        return FlagResolutionDetails(value=value, error_code=error_code, reason=reason, variant=variant)
