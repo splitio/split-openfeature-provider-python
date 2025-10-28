@@ -10,27 +10,27 @@ This SDK is compatible with Python 3 and higher.
 ## Getting started
 ### Pip Installation 
 ```python
-pip install split-openfeature==0.0.1
+pip install split-openfeature==1.0.0
 ```
 ### Configure it
 Below is a simple example that describes using the Split Provider. Please see the [OpenFeature Documentation](https://docs.openfeature.dev/docs/reference/concepts/evaluation-api) for details on how to use the OpenFeature SDK.
 
 ```python
-from open_feature import open_feature_api
+from openfeature import api
 from split_openfeature import SplitProvider
 
-open_feature_api.set_provider(SplitProvider(api_key="YOUR_API_KEY"))
+api.set_provider(SplitProvider(api_key="YOUR_API_KEY"))
 ```
 
 If you are more familiar with Split or want access to other initialization options, you can provide a Split `client` to the constructor. See the [Split Java SDK Documentation](https://help.split.io/hc/en-us/articles/360020405151-Java-SDK) for more information.
 ```python
-from open_feature import open_feature_api
+from openfeature import api
 from split_openfeature import SplitProvider
 from splitio import get_factory
 
 factory = get_factory("YOUR_API_KEY", config=config_file)
 factory.block_until_ready(5)
-open_feature_api.set_provider(SplitProvider(client=factory.client()))
+api.set_provider(SplitProvider(client=factory.client()))
 ```
 where config_file is the Split config file you want to use
 
@@ -39,10 +39,10 @@ After the initial setup you can use OpenFeature according to their [documentatio
 
 One important note is that the Split Provider **requires a targeting key** to be set. Often times this should be set when evaluating the value of a flag by [setting an EvaluationContext](https://docs.openfeature.dev/docs/reference/concepts/evaluation-context) which contains the targeting key. An example flag evaluation is
 ```python
-from open_feature import open_feature_api
-from open_feature.evaluation_context.evaluation_context import EvaluationContext
+from openfeature import api
+from openfeature.evaluation_context import EvaluationContext
 
-client = open_feature_api.get_client("CLIENT_NAME")
+client = api.get_client("CLIENT_NAME")
 
 context = EvaluationContext(targeting_key="TARGETING_KEY")
 value = client.get_boolean_value("FLAG_NAME", False, context)
@@ -54,10 +54,8 @@ client.context = context
 ```
 or at the OpenFeatureAPI level 
 ```python
-from open_feature.open_feature_evaluation_context import set_api_evaluation_context
-
 context = EvaluationContext(targeting_key="TARGETING_KEY")
-set_api_evaluation_context(context)
+api.set_evaluation_context(context)
 ````
 If the context was set at the client or api level, it is not required to provide it during flag evaluation.
 

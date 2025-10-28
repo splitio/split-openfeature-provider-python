@@ -1,8 +1,8 @@
 import pytest
-from open_feature import open_feature_api
-from open_feature.evaluation_context.evaluation_context import EvaluationContext
-from open_feature.exception.error_code import ErrorCode
-from open_feature.flag_evaluation.reason import Reason
+from openfeature import api
+from openfeature.evaluation_context import EvaluationContext
+from openfeature.exception import ErrorCode
+from openfeature.flag_evaluation import Reason
 from splitio import get_factory
 from split_openfeature import SplitProvider
 
@@ -18,17 +18,18 @@ class TestClient(object):
 
     @pytest.fixture
     def provider(self):
-        factory = get_factory("localhost", config={"splitFile": "split.yaml"})
-        factory.block_until_ready(5)
-        return SplitProvider(client=factory.client())
+        split_factory = get_factory("localhost", config={"splitFile": "split.yaml"})
+        split_factory.block_until_ready(5)
+        split_client = split_factory.client()
+        return SplitProvider(client=split_client)
 
     @pytest.fixture
     def set_provider(self, provider):
-        open_feature_api.set_provider(provider)
+        api.set_provider(provider)
 
     @pytest.fixture
     def client(self, set_provider):
-        return open_feature_api.get_client("Split Client")
+        return api.get_client()
 
     @pytest.fixture(autouse=True)
     def targeting_key(self, client):
@@ -108,7 +109,7 @@ class TestClient(object):
         assert result == {"key": "value"}
 
     def test_get_metadata(self):
-        assert open_feature_api.get_provider().get_metadata().name == "Split"
+        assert api.get_provider_metadata().name == "Split"
 
     def test_boolean_details(self, client):
         details = client.get_boolean_details(self.some_other_feature, True)

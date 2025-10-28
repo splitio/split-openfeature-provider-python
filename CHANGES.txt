@@ -1,2 +1,4 @@
 0.0.1
 - First release. Up to date with spec 0.5.1 and python sdk 0.0.6
+0.1.0
+- Up to date with spec 0.8.0 and python sdk 0.8.1. Using split client 10.2.0
