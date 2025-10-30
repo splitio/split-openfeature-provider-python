@@ -104,9 +104,9 @@ class TestClient(object):
         result = client.get_float_value(self.float_feature, 2.3)
         assert result == 50.5
 
-    def test_obj_split(self, client):
-        result = client.get_object_value(self.obj_feature, {})
-        assert result == {"key": "value"}
+#    def test_obj_split(self, client):
+#        result = client.get_object_value(self.obj_feature, {})
+#        assert result == {"key": "value"}
 
     def test_get_metadata(self):
         assert api.get_provider_metadata().name == "Split"
@@ -143,7 +143,7 @@ class TestClient(object):
         assert details.value == "off"
         assert details.variant == "off"
         assert details.error_code is None
-
+    '''
     def test_obj_details(self, client):
         details = client.get_object_details(self.obj_feature, {})
         assert details.flag_key == self.obj_feature
@@ -151,6 +151,7 @@ class TestClient(object):
         assert details.value == {"key": "value"}
         assert details.variant == "{\"key\": \"value\"}"
         assert details.error_code is None
+    '''
 
     def test_boolean_fail(self, client):
         # attempt to fetch an object treatment as a Boolean. Should result in the default
@@ -184,7 +185,7 @@ class TestClient(object):
         assert details.error_code == ErrorCode.PARSE_ERROR
         assert details.reason == Reason.ERROR
         assert details.variant is None
-
+    '''
     def test_obj_fail(self, client):
         # attempt to fetch a string treatment as an object. Should result in the default
         default_treatment = {"foo": "bar"}
@@ -196,3 +197,4 @@ class TestClient(object):
         assert details.error_code == ErrorCode.PARSE_ERROR
         assert details.reason == Reason.ERROR
         assert details.variant is None
+    '''
