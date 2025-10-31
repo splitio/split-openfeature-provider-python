@@ -11,4 +11,4 @@
 - float_feature:
       treatment: "50.5"
 - obj_feature:
-    treatment: "{\"key\": \"value\"}"
+    treatment: "key"

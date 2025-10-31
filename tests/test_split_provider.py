@@ -1,4 +1,5 @@
 from pytest import fail
+import pytest
 from mock import MagicMock
 from openfeature.exception import ErrorCode, OpenFeatureError
 from openfeature.evaluation_context import EvaluationContext
@@ -14,21 +15,14 @@ class TestProvider(object):
         self.provider = SplitProvider(client=self.client)
 
     def mock_client_return(self, val):
-        self.client.get_treatment.return_value = val
+        self.client.get_treatment_with_config.return_value = (val, "{'prop':'val'}")
 
     # *** Boolean eval tests ***
-
     def test_boolean_none_empty(self):
         # if a treatment is None or empty it should return the default treatment
         self.reset_client()
 
         self.mock_client_return(None)
-        result = self.provider.resolve_boolean_details(self.flag_name, True, self.eval_context)
-        assert result.value
-        result = self.provider.resolve_boolean_details(self.flag_name, False, self.eval_context)
-        assert not result.value
-
-        self.mock_client_return("")
         result = self.provider.resolve_boolean_details(self.flag_name, True, self.eval_context)
         assert result.value
         result = self.provider.resolve_boolean_details(self.flag_name, False, self.eval_context)
@@ -47,25 +41,37 @@ class TestProvider(object):
         # treatment of "true" should eval to True boolean
         self.reset_client()
         self.mock_client_return("true")
-        assert self.provider.resolve_boolean_details(self.flag_name, False, self.eval_context).value
+        details = self.provider.resolve_boolean_details(self.flag_name, False, self.eval_context)
+        assert details.value
+        assert details.flag_metadata["config"] == "{'prop':'val'}"
+        assert details.variant == "true"
 
     def test_boolean_on(self):
         # treatment of "on" should eval to True boolean
         self.reset_client()
         self.mock_client_return("on")
-        assert self.provider.resolve_boolean_details(self.flag_name, False, self.eval_context).value
+        details = self.provider.resolve_boolean_details(self.flag_name, False, self.eval_context)
+        assert details.value
+        assert details.flag_metadata["config"] == "{'prop':'val'}"
+        assert details.variant == "on"
 
     def test_boolean_false(self):
         # treatment of "true" should eval to True boolean
         self.reset_client()
         self.mock_client_return("false")
-        assert not self.provider.resolve_boolean_details(self.flag_name, True, self.eval_context).value
+        details = self.provider.resolve_boolean_details(self.flag_name, False, self.eval_context)
+        assert not details.value
+        assert details.flag_metadata["config"] == "{'prop':'val'}"
+        assert details.variant == "false"
 
     def test_boolean_off(self):
         # treatment of "on" should eval to True boolean
         self.reset_client()
         self.mock_client_return("off")
-        assert not self.provider.resolve_boolean_details(self.flag_name, True, self.eval_context).value
+        details = self.provider.resolve_boolean_details(self.flag_name, False, self.eval_context)
+        assert not details.value
+        assert details.flag_metadata["config"] == "{'prop':'val'}"
+        assert details.variant == "off"
 
     def test_boolean_error(self):
         # any other random string other than on,off,true,false,control should throw an error
@@ -80,7 +86,6 @@ class TestProvider(object):
             fail("Unexpected exception occurred")
 
     # *** String eval tests ***
-
     def test_string_none_empty(self):
         # if a treatment is None or empty it should return the default treatment
         self.reset_client()
@@ -109,9 +114,10 @@ class TestProvider(object):
         self.mock_client_return(treatment)
         result = self.provider.resolve_string_details(self.flag_name, "someDefaultTreatment", self.eval_context)
         assert result.value == treatment
+        assert result.flag_metadata["config"] == "{'prop':'val'}"
+        assert result.variant == "treatment"
 
     # *** Integer eval tests ***
-
     def test_int_none_empty(self):
         # if a treatment is null empty it should return the default treatment
         self.reset_client()
@@ -141,6 +147,8 @@ class TestProvider(object):
         result = self.provider.resolve_integer_details(self.flag_name, 1, self.eval_context)
         assert result.value == 50
         assert isinstance(result.value, int)
+        assert result.flag_metadata["config"] == "{'prop':'val'}"
+        assert result.variant == "50"
 
     def test_int_error(self):
         # an un-parsable int treatment should throw an error
@@ -164,7 +172,6 @@ class TestProvider(object):
             fail("Unexpected exception occurred")
 
     # *** Float eval tests ***
-
     def test_float_none_empty(self):
         # if a treatment is null empty it should return the default treatment
         self.reset_client()
@@ -192,6 +199,8 @@ class TestProvider(object):
         self.mock_client_return("50.5")
         result = self.provider.resolve_float_details(self.flag_name, 1.5, self.eval_context)
         assert result.value == 50.5
+        assert result.flag_metadata["config"] == "{'prop':'val'}"
+        assert result.variant == "50.5"
 
         # it should also be able to handle regular ints
         self.mock_client_return("50")
@@ -212,7 +221,6 @@ class TestProvider(object):
             fail("Unexpected exception occurred")
 
     # *** Object eval tests ***
-
     def test_obj_none_empty(self):
         # if a treatment is null empty it should return the default treatment
         self.reset_client()
@@ -240,6 +248,8 @@ class TestProvider(object):
         self.mock_client_return('{"foo": "bar"}')
         result = self.provider.resolve_object_details(self.flag_name, {"blah": "blaah"}, self.eval_context)
         assert result.value == {"foo": "bar"}
+        assert result.flag_metadata["config"] == "{'prop':'val'}"
+        assert result.variant == '{"foo": "bar"}'
 
     def test_obj_complex(self):
         self.reset_client()
