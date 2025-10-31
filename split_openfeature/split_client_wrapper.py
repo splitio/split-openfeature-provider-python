@@ -19,7 +19,7 @@ class SplitClientWrapper():
             self._factory = self.split_client._factory
             return
 
-        api_key = initial_context.get("ApiKey")
+        api_key = initial_context.get("SdkKey")
         config = {}
         if initial_context.get("ConfigOptions") != None:
             config = initial_context.get("ConfigOptions")
@@ -54,12 +54,12 @@ class SplitClientWrapper():
             _LOGGER.error("SplitClientWrapper: initial_context must be of type `dict`")
             return False
         
-        if initial_context.get("SplitClient") == None and initial_context.get("ApiKey") == None:
-            _LOGGER.error("SplitClientWrapper: initial_context must contain keys `SplitClient` or `ApiKey`")
+        if initial_context.get("SplitClient") == None and initial_context.get("SdkKey") == None:
+            _LOGGER.error("SplitClientWrapper: initial_context must contain keys `SplitClient` or `SdkKey`")
             return False
 
-        if initial_context.get("ApiKey") != None and not isinstance(initial_context.get("ApiKey"), str):
-            _LOGGER.error("SplitClientWrapper: key `ApiKey` must be of type `str`")
+        if initial_context.get("SdkKey") != None and not isinstance(initial_context.get("SdkKey"), str):
+            _LOGGER.error("SplitClientWrapper: key `SdkKey` must be of type `str`")
             return False
 
         if initial_context.get("ConfigOptions") != None and not isinstance(initial_context.get("ConfigOptions"), dict):

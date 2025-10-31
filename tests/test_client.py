@@ -7,7 +7,6 @@ from splitio import get_factory
 from split_openfeature import SplitProvider
 
 class TestClient(object):
-
     # The following are splits with treatments defined in the split.yaml file
     my_feature = "my_feature"  # 'on' when targeting_key='key', else 'off'
     some_other_feature = "some_other_feature"  # 'off'
@@ -197,3 +196,8 @@ class TestClient(object):
         assert details.reason == Reason.ERROR
         assert details.variant is None
     '''
+    
+class TestClientInternal(TestClient):
+    @pytest.fixture
+    def provider(self):
+        return SplitProvider({"SdkKey": "localhost", "ConfigOptions": {"splitFile": "split.yaml"}})    
