@@ -12,7 +12,7 @@ class TestProvider(object):
 
     def reset_client(self):
         self.client = MagicMock()
-        self.provider = SplitProvider(client=self.client)
+        self.provider = SplitProvider({"SplitClient": self.client})
 
     def mock_client_return(self, val):
         self.client.get_treatment_with_config.return_value = (val, "{'prop':'val'}")

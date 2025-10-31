@@ -6,7 +6,6 @@ from openfeature.flag_evaluation import Reason
 from splitio import get_factory
 from split_openfeature import SplitProvider
 
-
 class TestClient(object):
 
     # The following are splits with treatments defined in the split.yaml file
@@ -21,7 +20,7 @@ class TestClient(object):
         split_factory = get_factory("localhost", config={"splitFile": "split.yaml"})
         split_factory.block_until_ready(5)
         split_client = split_factory.client()
-        return SplitProvider(client=split_client)
+        return SplitProvider({"SplitClient": split_client})
 
     @pytest.fixture
     def set_provider(self, provider):

@@ -6,28 +6,15 @@ from openfeature.evaluation_context import EvaluationContext
 from openfeature.exception import ErrorCode, GeneralError, ParseError, OpenFeatureError, TargetingKeyMissingError
 from openfeature.flag_evaluation import Reason, FlagResolutionDetails
 from openfeature.provider import AbstractProvider, Metadata
-from splitio import get_factory
-from splitio.exceptions import TimeoutException
+from split_openfeature.split_client_wrapper import SplitClientWrapper
 import json
 
 _LOGGER = logging.getLogger(__name__)
 
 class SplitProvider(AbstractProvider):
 
-    def __init__(self, api_key="", client=None):
-        if api_key == "" and client is None:
-            raise Exception("Must provide apiKey or Split Client")
-        
-        if api_key != "":
-            factory = get_factory(api_key)
-            try:
-                factory.block_until_ready(1)
-            except TimeoutException:
-                raise GeneralError("Error occurred initializing the client.")
-            
-            self.split_client = factory.client()
-        else:
-            self.split_client = client
+    def __init__(self, initial_context):
+        self._split_client_wrapper = SplitClientWrapper(initial_context)
 
     def get_metadata(self) -> Metadata:
         return Metadata("Split")
@@ -59,13 +46,17 @@ class SplitProvider(AbstractProvider):
         if evaluation_context is None:
             raise GeneralError("Evaluation Context must be provided for the Split Provider")
 
+        if not self._split_client_wrapper.is_sdk_ready():
+            return SplitProvider.construct_flag_resolution(default_value, None, None, Reason.ERROR,
+                                                               ErrorCode.PROVIDER_NOT_READY)
+        
         targeting_key = evaluation_context.targeting_key
         if not targeting_key:
             raise TargetingKeyMissingError("Missing targeting key")
 
         try:
             attributes = SplitProvider.transform_context(evaluation_context)
-            evaluated = self.split_client.get_treatment_with_config(targeting_key, key, attributes)
+            evaluated = self._split_client_wrapper.split_client.get_treatment_with_config(targeting_key, key, attributes)
             treatment = None
             config = None
             if evaluated != None:
