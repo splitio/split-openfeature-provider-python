@@ -268,3 +268,9 @@ class TestProvider(object):
             assert e.error_code == ErrorCode.PARSE_ERROR
         except Exception:
             fail("Unexpected exception occurred")
+            
+    def test_sdk_not_ready(self):
+        provider = SplitProvider({"ReadyBlockTime": 0.1,"ApiKey": "api"})
+        details = provider.resolve_boolean_details(self.flag_name, False, self.eval_context)
+        assert details.error_code == ErrorCode.PROVIDER_NOT_READY
+        assert details.value == False
