@@ -12,7 +12,7 @@ class TestProvider(object):
 
     def reset_client(self):
         self.client = MagicMock()
-        self.provider = SplitProvider(client=self.client)
+        self.provider = SplitProvider({"SplitClient": self.client})
 
     def mock_client_return(self, val):
         self.client.get_treatment_with_config.return_value = (val, "{'prop':'val'}")
@@ -268,3 +268,9 @@ class TestProvider(object):
             assert e.error_code == ErrorCode.PARSE_ERROR
         except Exception:
             fail("Unexpected exception occurred")
+            
+    def test_sdk_not_ready(self):
+        provider = SplitProvider({"ReadyBlockTime": 0.1,"SdkKey": "api"})
+        details = provider.resolve_boolean_details(self.flag_name, False, self.eval_context)
+        assert details.error_code == ErrorCode.PROVIDER_NOT_READY
+        assert details.value == False

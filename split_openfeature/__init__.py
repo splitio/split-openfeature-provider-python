@@ -1,1 +1,3 @@
 from split_openfeature.split_provider import SplitProvider
+from split_openfeature.split_client_wrapper import SplitClientWrapper
+
