@@ -35,7 +35,7 @@ jobs:
             pip install -U setuptools pip wheel
             pip install -e .[cpphash,redis,uwsgi]
             pip install pytest --quiet
-            pip install requirements.txt
+            pip install -r requirements.txt
 
       - name: Run tests
         run: python setup.py install; cd tests; pytest
