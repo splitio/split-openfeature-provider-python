@@ -1,7 +1,6 @@
 import typing
 import logging
 import json
-from threading import Event
 
 from openfeature.hook import Hook
 from openfeature.evaluation_context import EvaluationContext

@@ -107,7 +107,14 @@ from openfeature.evaluation_context import EvaluationContext
 client = api.get_client("CLIENT_NAME")
 
 context = EvaluationContext(targeting_key="TARGETING_KEY")
-value = await client.get_boolean_value("FLAG_NAME", False, context)
+value = await client.get_boolean_value_async("FLAG_NAME", False, context)
+```
+### Logging
+Split Provider use `logging` library, Each module has it's own logger, the root being split_provider. Below is an example of simple usage which will set all libraries using `logging` including the provider, to use `DEBUG` mode.
+```python
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 ```
 
 ### Shutting down Split SDK factory
