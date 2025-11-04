@@ -36,8 +36,7 @@ jobs:
             pip install -e .[cpphash,redis,uwsgi]
 
       - name: Run tests
-        run: python setup.py install
-        run: tests/pytest
+        run: python setup.py install; cd tests; pytest
 
       - name: Set VERSION env
         run: echo "VERSION=$(cat setup.py | grep "version=" | cut -d'"' -f2)" >> $GITHUB_ENV
