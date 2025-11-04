@@ -69,6 +69,12 @@ class SplitClientWrapper():
         
         return self.sdk_ready
 
+    def destroy(self, destroy_event=None):
+        self._factory.destroy(destroy_event)
+
+    async def destroy_async(self):
+        await self._factory.destroy()
+        
     async def is_sdk_ready_async(self):
         if self.sdk_ready:
             return True

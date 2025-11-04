@@ -1,4 +1,6 @@
 import pytest
+from threading import Event
+
 from openfeature import api
 from openfeature.evaluation_context import EvaluationContext
 from openfeature.exception import ErrorCode
@@ -23,6 +25,7 @@ class TestClient(object):
 
     @pytest.fixture
     def set_provider(self, provider):
+        self.provider = provider
         api.set_provider(provider)
 
     @pytest.fixture
@@ -33,6 +36,10 @@ class TestClient(object):
     def targeting_key(self, client):
         client.context = EvaluationContext(targeting_key="key")
 
+    def _destroy_factory(self):
+        self.provider._split_client_wrapper._factory.destroy()
+        assert self.provider._split_client_wrapper._factory.destroyed        
+        
     def test_use_default(self, client):
         # flags that do not exist should return the default value
         flag_name = "random-non-existent-feature"
@@ -57,7 +64,7 @@ class TestClient(object):
         default_obj = {"foo": "bar"}
         result = client.get_object_value(flag_name, default_obj)
         assert result == default_obj
-
+        
     def test_missing_targeting_key(self, client):
         # Split requires a targeting key and should return the default treatment
         # and throw an error if not provided
@@ -102,10 +109,6 @@ class TestClient(object):
         result = client.get_float_value(self.float_feature, 2.3)
         assert result == 50.5
 
-#    def test_obj_split(self, client):
-#        result = client.get_object_value(self.obj_feature, {})
-#        assert result == {"key": "value"}
-
     def test_get_metadata(self):
         assert api.get_provider_metadata().name == "Split"
 
@@ -141,15 +144,13 @@ class TestClient(object):
         assert details.value == "off"
         assert details.variant == "off"
         assert details.error_code is None
-    '''
+
     def test_obj_details(self, client):
-        details = client.get_object_details(self.obj_feature, {})
+        details = client.get_object_details(self.obj_feature, {"val": "control"})
         assert details.flag_key == self.obj_feature
-        assert details.reason == Reason.TARGETING_MATCH
-        assert details.value == {"key": "value"}
-        assert details.variant == "{\"key\": \"value\"}"
-        assert details.error_code is None
-    '''
+        assert details.reason == Reason.ERROR
+        assert details.error_code == ErrorCode.PARSE_ERROR
+        assert details.value == {"val": "control"}
 
     def test_boolean_fail(self, client):
         # attempt to fetch an object treatment as a Boolean. Should result in the default
@@ -183,19 +184,7 @@ class TestClient(object):
         assert details.error_code == ErrorCode.PARSE_ERROR
         assert details.reason == Reason.ERROR
         assert details.variant is None
-    '''
-    def test_obj_fail(self, client):
-        # attempt to fetch a string treatment as an object. Should result in the default
-        default_treatment = {"foo": "bar"}
-        value = client.get_object_value(self.some_other_feature, default_treatment)
-        assert value == default_treatment
-
-        details = client.get_object_details(self.some_other_feature, default_treatment)
-        assert details.value == default_treatment
-        assert details.error_code == ErrorCode.PARSE_ERROR
-        assert details.reason == Reason.ERROR
-        assert details.variant is None
-    '''
+        self._destroy_factory()
     
 class TestClientInternal(TestClient):
     @pytest.fixture

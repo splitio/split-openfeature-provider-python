@@ -5,7 +5,7 @@
 This Provider is designed to allow the use of OpenFeature with Split, the platform for controlled rollouts, serving features to your users via the Split feature flag to manage your complete customer experience.
 
 ## Compatibility
-This SDK is compatible with Python 3 and higher.
+This SDK is compatible with Python 3.7.16 and higher.
 
 ## Getting started
 ### Pip Installation 
@@ -18,21 +18,28 @@ Below is a simple example that describes using the Split Provider. Please see th
 ```python
 from openfeature import api
 from split_openfeature import SplitProvider
-
-api.set_provider(SplitProvider(api_key="YOUR_API_KEY"))
+config = {
+      'impressionsMode': 'OPTIMIZED',
+      'impressionsRefreshRate': 30,
+    }
+provider = SplitProvider({"SdkKey": "YOUR_API_KEY", "ConfigOptions": config, "ReadyBlockTime": 5})
+api.set_provider(provider)
 ```
 
-If you are more familiar with Split or want access to other initialization options, you can provide a Split `client` to the constructor. See the [Split Java SDK Documentation](https://help.split.io/hc/en-us/articles/360020405151-Java-SDK) for more information.
+If you are more familiar with Split or want access to other initialization options, you can provide a Split `client` to the constructor. See the [Harness Split Python SDK Documentation](https://developer.harness.io/docs/feature-management-experimentation/sdks-and-infrastructure/server-side-sdks/python-sdk/) for more information.
 ```python
 from openfeature import api
 from split_openfeature import SplitProvider
 from splitio import get_factory
 
-factory = get_factory("YOUR_API_KEY", config=config_file)
+config = {
+      'impressionsMode': 'OPTIMIZED',
+      'impressionsRefreshRate': 30,
+    }
+factory = get_factory("YOUR_API_KEY", config=config)
 factory.block_until_ready(5)
-api.set_provider(SplitProvider(client=factory.client()))
+api.set_provider(SplitProvider({"SplitClient": factory.client()}))
 ```
-where config_file is the Split config file you want to use
 
 ## Use of OpenFeature with Split
 After the initial setup you can use OpenFeature according to their [documentation](https://docs.openfeature.dev/docs/reference/concepts/evaluation-api/).
@@ -56,8 +63,68 @@ or at the OpenFeatureAPI level
 ```python
 context = EvaluationContext(targeting_key="TARGETING_KEY")
 api.set_evaluation_context(context)
-````
+```
 If the context was set at the client or api level, it is not required to provide it during flag evaluation.
+
+### Asyncio mode
+The provider supports asyncio mode as well, using the asyncio mode in Split SDK.
+Example below shows using the provider in asyncio
+
+```python
+from openfeature import api
+from split_openfeature import SplitProviderAsync
+config = {
+      'impressionsMode': 'OPTIMIZED',
+      'impressionsRefreshRate': 30,
+    }
+provider = SplitProvider({"SdkKey": "YOUR_API_KEY", "ConfigOptions": config, "ReadyBlockTime": 5})
+await provider.create()
+api.set_provider(provider)
+```
+
+Example below show how to create the Split Client externally and pass it to Provider
+```python
+from openfeature import api
+from split_openfeature import SplitProviderAsync
+from splitio import get_factory_async
+
+config = {
+      'impressionsMode': 'OPTIMIZED',
+      'impressionsRefreshRate': 30,
+    }
+factory = get_factory_async("YOUR_API_KEY", config=config)
+await factory.block_until_ready(5)
+provider = SplitProviderAsync({"SplitClient": factory.client()})
+await provider.create()
+api.set_provider(provider)
+```
+
+Example below fetching the treatment in asyncio mode
+```python
+from openfeature import api
+from openfeature.evaluation_context import EvaluationContext
+
+client = api.get_client("CLIENT_NAME")
+
+context = EvaluationContext(targeting_key="TARGETING_KEY")
+value = await client.get_boolean_value("FLAG_NAME", False, context)
+```
+
+### Shutting down Split SDK factory
+Currently OpenFeature SDK does not provide override for provider shutdown, when using internal split client object, the Split SDK will not shutdown properly. We recommend using the example below before terminating the OpenFeature object
+
+```python
+from threading import Event
+
+destroy_event = Event()
+provider._split_client_wrapper._factory.destroy(destroy_event)
+destroy_event.wait()
+```
+
+Below the example for asyncio mode
+```python
+await provider._split_client_wrapper._factory.destroy()
+```
 
 ## Submitting issues
  
