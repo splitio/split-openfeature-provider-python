@@ -34,6 +34,7 @@ jobs:
             sudo apt-get install -y libkrb5-dev
             pip install -U setuptools pip wheel
             pip install -e .[cpphash,redis,uwsgi]
+            pip install pytest --quiet
 
       - name: Run tests
         run: python setup.py install; cd tests; pytest
