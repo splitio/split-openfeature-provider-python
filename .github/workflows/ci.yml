@@ -40,7 +40,7 @@ jobs:
             pip install -r requirements.txt
 
       - name: Run tests
-        run: python setup.py install; cd tests; pytest
+        run: cd tests; pytest -v
 
       - name: Set VERSION env
         run: echo "VERSION=$(cat setup.py | grep "version=" | cut -d'"' -f2)" >> $GITHUB_ENV
