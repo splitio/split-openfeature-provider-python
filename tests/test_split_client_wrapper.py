@@ -1,10 +1,10 @@
 import pytest
-from splitio import get_factory
-from split_openfeature import SplitClientWrapper
 import unittest
 
-class TestSplitClientWrapper(unittest.TestCase):
+from splitio import get_factory, get_factory_async
+from split_openfeature import SplitClientWrapper
 
+class TestSplitClientWrapper(unittest.TestCase):
     def test_using_external_splitclient(self):
         split_factory = get_factory("localhost", config={"splitFile": "split.yaml"})
         split_factory.block_until_ready(5)
@@ -18,7 +18,6 @@ class TestSplitClientWrapper(unittest.TestCase):
         assert wrapper.split_client != None
         assert wrapper.is_sdk_ready()
         assert wrapper.sdk_ready == 1
-
 
     def test_sdk_not_ready(self):
         wrapper = SplitClientWrapper({"ReadyBlockTime": 0.1, "SdkKey": "api", "ConfigOptions": {}})        
@@ -39,3 +38,28 @@ class TestSplitClientWrapper(unittest.TestCase):
     def test_reqwuired_params(self):
         with self.assertRaises(AttributeError) as context:
             wrapper = SplitClientWrapper({"ConfigOptions": {}})
+
+class TestSplitClientWrapperAsync(object):
+    @pytest.mark.asyncio
+    async def test_using_external_splitclient_async(self):
+        split_factory = await get_factory_async("localhost", config={"splitFile": "split.yaml"})
+        await split_factory.block_until_ready(5)
+        split_client = split_factory.client()
+        wrapper = SplitClientWrapper({"SplitClient": split_client, "ThreadingMode": "asyncio"})
+        await wrapper.create()
+        assert wrapper.split_client != None
+        assert await wrapper.is_sdk_ready_async()
+
+    @pytest.mark.asyncio
+    async def test_using_internal_splitclient_async(self):
+        wrapper = SplitClientWrapper({"ReadyBlockTime": 1, "SdkKey": "localhost", "ConfigOptions": {"splitFile": "split.yaml"}, "ThreadingMode": "asyncio"})
+        await wrapper.create()
+        assert wrapper.split_client != None
+        assert await wrapper.is_sdk_ready_async()
+        assert wrapper.sdk_ready == True
+
+    @pytest.mark.asyncio
+    async def test_sdk_not_ready_async(self):
+        wrapper = SplitClientWrapper({"ReadyBlockTime": 0.1, "SdkKey": "api", "ConfigOptions": {}, "ThreadingMode": "asyncio"})        
+        await wrapper.create()
+        assert not await wrapper.is_sdk_ready_async()
