@@ -5,7 +5,7 @@
 This Provider is designed to allow the use of OpenFeature with Split, the platform for controlled rollouts, serving features to your users via the Split feature flag to manage your complete customer experience.
 
 ## Compatibility
-This SDK is compatible with Python 3.7.16 and higher.
+This SDK is compatible with Python 3.9 and higher.
 
 ## Getting started
 ### Pip Installation 
