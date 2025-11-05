@@ -1,8 +1,4 @@
-0.0.1
-- First release. Up to date with spec 0.5.1 and python sdk 0.0.6
-
-0.1.0
-- Up to date with spec 0.8.0 and python sdk 0.8.1. Using split client 10.2.0
+Changes
 
 1.0.0 (Nov 5 2026)
 - BREAKING CHANGE: Passing the SplitClient object to Provider constructor is now only through the initialization context dictionary
@@ -11,3 +7,9 @@
 - Upgraded OpenFeature SDK to 0.8.3
 - Added support for asyncio mode
 - Added ability to pass Ready Timeout and ConfigurationOptions to Provider initialization
+
+0.1.0
+- Up to date with spec 0.8.0 and python sdk 0.8.1. Using split client 10.2.0
+
+0.0.1
+- First release. Up to date with spec 0.5.1 and python sdk 0.0.6
