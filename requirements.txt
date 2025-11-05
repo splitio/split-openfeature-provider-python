@@ -1,2 +1,2 @@
-openfeature_sdk==0.8.1
-splitio_client==10.2.0
+openfeature_sdk==0.8.3
+splitio_client[cpphash,asyncio]==10.5.1
