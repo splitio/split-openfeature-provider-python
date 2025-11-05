@@ -6,8 +6,6 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="split_openfeature",
     version="1.0.0",
-    author="Robert Grassian",
-    author_email="robert.grassian@split.io",
     description="The official Python Split Provider for OpenFeature",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -17,5 +15,5 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         'Topic :: Software Development :: Libraries'
     ],
-    python_requires='>=3.5'
+    python_requires='>=3.9'
 )

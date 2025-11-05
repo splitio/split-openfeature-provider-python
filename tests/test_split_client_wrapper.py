@@ -1,5 +1,6 @@
 import pytest
 import unittest
+from threading import Event
 
 from splitio import get_factory, get_factory_async
 from split_openfeature import SplitClientWrapper
@@ -12,16 +13,26 @@ class TestSplitClientWrapper(unittest.TestCase):
         wrapper = SplitClientWrapper({"SplitClient": split_client})
         assert wrapper.split_client != None
         assert wrapper.is_sdk_ready()
+        
+        destroy_event = Event()
+        wrapper.destroy(destroy_event)
+        destroy_event.wait()
+        assert split_factory.destroyed
 
     def test_using_internal_splitclient(self):
         wrapper = SplitClientWrapper({"ReadyBlockTime": 1, "SdkKey": "localhost", "ConfigOptions": {"splitFile": "split.yaml"}})
         assert wrapper.split_client != None
         assert wrapper.is_sdk_ready()
         assert wrapper.sdk_ready == 1
+        destroy_event = Event()
+        wrapper.destroy(destroy_event)
+        destroy_event.wait()
+        assert wrapper._factory.destroyed
 
     def test_sdk_not_ready(self):
         wrapper = SplitClientWrapper({"ReadyBlockTime": 0.1, "SdkKey": "api", "ConfigOptions": {}})        
         assert not wrapper.is_sdk_ready()
+        wrapper.destroy()
 
     def test_invalid_apikey(self):
         with self.assertRaises(AttributeError) as context:
@@ -49,6 +60,8 @@ class TestSplitClientWrapperAsync(object):
         await wrapper.create()
         assert wrapper.split_client != None
         assert await wrapper.is_sdk_ready_async()
+        await wrapper.destroy_async()
+        assert split_factory.destroyed
 
     @pytest.mark.asyncio
     async def test_using_internal_splitclient_async(self):
@@ -57,9 +70,12 @@ class TestSplitClientWrapperAsync(object):
         assert wrapper.split_client != None
         assert await wrapper.is_sdk_ready_async()
         assert wrapper.sdk_ready == True
+        await wrapper.destroy_async()
+        assert wrapper._factory.destroyed
 
     @pytest.mark.asyncio
     async def test_sdk_not_ready_async(self):
         wrapper = SplitClientWrapper({"ReadyBlockTime": 0.1, "SdkKey": "api", "ConfigOptions": {}, "ThreadingMode": "asyncio"})        
         await wrapper.create()
         assert not await wrapper.is_sdk_ready_async()
+        await wrapper.destroy_async()

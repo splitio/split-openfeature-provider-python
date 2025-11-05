@@ -1,5 +1,6 @@
 import typing
 import logging
+import json
 
 from openfeature.hook import Hook
 from openfeature.evaluation_context import EvaluationContext
@@ -7,7 +8,6 @@ from openfeature.exception import ErrorCode, GeneralError, ParseError, OpenFeatu
 from openfeature.flag_evaluation import Reason, FlagResolutionDetails
 from openfeature.provider import AbstractProvider, Metadata
 from split_openfeature.split_client_wrapper import SplitClientWrapper
-import json
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,7 +159,7 @@ class SplitProvider(SplitProviderBase):
     def resolve_object_details(self, flag_key: str, default_value: dict,
                                evaluation_context: EvaluationContext = EvaluationContext()):
         return self._evaluate_treatment(flag_key, evaluation_context, default_value)
-
+        
 class SplitProviderAsync(SplitProviderBase):
     def __init__(self, initial_context):
         if isinstance(initial_context, dict):

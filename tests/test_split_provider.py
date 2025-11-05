@@ -576,3 +576,4 @@ class TestProviderAsync(object):
         details = await provider.resolve_boolean_details_async(self.flag_name, False, self.eval_context)
         assert details.error_code == ErrorCode.PROVIDER_NOT_READY
         assert details.value == False
+        await provider._split_client_wrapper._factory.destroy()
