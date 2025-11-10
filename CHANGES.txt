@@ -1,6 +1,6 @@
-Changes
+CHANGES
 
-1.0.0 (Nov 5 2026)
+1.0.0 (Nov 10 2025)
 - BREAKING CHANGE: Passing the SplitClient object to Provider constructor is now only through the initialization context dictionary
 - BREAKING CHANGE: Provider will throw exception when ObjectDetail and ObjectValue evaluation is used, since it will attempt to parse the treatment as a JSON structure.
 - Upgraded Split SDK to 10.5.1

@@ -7,7 +7,7 @@ from openfeature.evaluation_context import EvaluationContext
 from openfeature.exception import ErrorCode, GeneralError, ParseError, OpenFeatureError, TargetingKeyMissingError
 from openfeature.flag_evaluation import Reason, FlagResolutionDetails
 from openfeature.provider import AbstractProvider, Metadata
-from split_openfeature.split_client_wrapper import SplitClientWrapper
+from split_openfeature_provider.split_client_wrapper import SplitClientWrapper
 
 _LOGGER = logging.getLogger(__name__)
 
