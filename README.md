@@ -10,14 +10,14 @@ This SDK is compatible with Python 3.9 and higher.
 ## Getting started
 ### Pip Installation 
 ```python
-pip install split-openfeature==1.0.0
+pip install split-openfeature-provider==1.0.0
 ```
 ### Configure it
 Below is a simple example that describes using the Split Provider. Please see the [OpenFeature Documentation](https://docs.openfeature.dev/docs/reference/concepts/evaluation-api) for details on how to use the OpenFeature SDK.
 
 ```python
 from openfeature import api
-from split_openfeature import SplitProvider
+from split_openfeature_provider import SplitProvider
 config = {
       'impressionsMode': 'OPTIMIZED',
       'impressionsRefreshRate': 30,
@@ -29,7 +29,7 @@ api.set_provider(provider)
 If you are more familiar with Split or want access to other initialization options, you can provide a Split `client` to the constructor. See the [Harness Split Python SDK Documentation](https://developer.harness.io/docs/feature-management-experimentation/sdks-and-infrastructure/server-side-sdks/python-sdk/) for more information.
 ```python
 from openfeature import api
-from split_openfeature import SplitProvider
+from split_openfeature_provider import SplitProvider
 from splitio import get_factory
 
 config = {
@@ -72,7 +72,7 @@ Example below shows using the provider in asyncio
 
 ```python
 from openfeature import api
-from split_openfeature import SplitProviderAsync
+from split_openfeature_provider import SplitProviderAsync
 config = {
       'impressionsMode': 'OPTIMIZED',
       'impressionsRefreshRate': 30,
@@ -85,7 +85,7 @@ api.set_provider(provider)
 Example below show how to create the Split Client externally and pass it to Provider
 ```python
 from openfeature import api
-from split_openfeature import SplitProviderAsync
+from split_openfeature_provider import SplitProviderAsync
 from splitio import get_factory_async
 
 config = {
