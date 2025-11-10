@@ -6,7 +6,7 @@ from openfeature.evaluation_context import EvaluationContext
 from openfeature.exception import ErrorCode
 from openfeature.flag_evaluation import Reason
 from splitio import get_factory
-from split_openfeature import SplitProvider
+from split_openfeature_provider import SplitProvider
 
 class TestClient(object):
     # The following are splits with treatments defined in the split.yaml file

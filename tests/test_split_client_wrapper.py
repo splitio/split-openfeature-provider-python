@@ -3,7 +3,7 @@ import unittest
 from threading import Event
 
 from splitio import get_factory, get_factory_async
-from split_openfeature import SplitClientWrapper
+from split_openfeature_provider import SplitClientWrapper
 
 class TestSplitClientWrapper(unittest.TestCase):
     def test_using_external_splitclient(self):

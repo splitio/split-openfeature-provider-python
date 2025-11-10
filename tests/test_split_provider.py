@@ -3,7 +3,7 @@ import pytest
 from mock import MagicMock
 from openfeature.exception import ErrorCode, OpenFeatureError
 from openfeature.evaluation_context import EvaluationContext
-from split_openfeature import SplitProvider, SplitProviderAsync
+from split_openfeature_provider import SplitProvider, SplitProviderAsync
 
 class TestProvider(object):
     eval_context = EvaluationContext("someKey")
