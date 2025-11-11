@@ -8,6 +8,9 @@ This Provider is designed to allow the use of OpenFeature with Split, the platfo
 This SDK is compatible with Python 3.9 and higher.
 
 ## Getting started
+
+This package replaces the previous `split-openfeature-provider` Python provider in [Pypi](https://pypi.org/project/split-openfeature-provider/).
+
 ### Pip Installation 
 ```python
 pip install split-openfeature-provider==1.0.0
