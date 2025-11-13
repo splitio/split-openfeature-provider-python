@@ -1,0 +1,82 @@
+pipeline:
+  name: split-openfeature-provider-python
+  identifier: splitopenfeatureproviderpython
+  projectIdentifier: Harness_Split
+  orgIdentifier: PROD
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: fmegithubharnessgitops
+        repoName: split-openfeature-provider-python
+        build: <+input>
+  stages:
+    - stage:
+        name: Build and test
+        identifier: Build_and_test
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Install Python 3.9
+                  identifier: Install_Python_39
+                  spec:
+                    shell: Sh
+                    command: |
+                      # Update package list
+                      sudo apt-get update
+
+                      # Install dependencies
+                      sudo apt-get install -y software-properties-common
+
+                      # Add deadsnakes PPA for Python versions
+                      sudo add-apt-repository -y ppa:deadsnakes/ppa
+                      sudo apt-get update
+
+                      # Install Python 3.9 and pip
+                      sudo apt-get install -y python3.9 python3.9-pip python3.9-venv python3.9-dev
+
+                      # Create symlinks for easier access
+                      sudo ln -sf /usr/bin/python3.9 /usr/bin/python3
+                      sudo ln -sf /usr/bin/python3.9 /usr/bin/python
+
+                      # Verify installation
+                      python3.9 --version
+                      python3.9 -m pip --version
+
+                      echo "Python 3.9 installation completed successfully!"
+              - step:
+                  type: Run
+                  name: Install dependencies
+                  identifier: Install_dependencies
+                  spec:
+                    shell: Sh
+                    command: |-
+                      sudo apt update
+                      sudo apt-get install -y libkrb5-dev
+                      pip install -U setuptools pip wheel
+                      pip install -e .[cpphash,redis,uwsgi]
+                      pip install pytest --quiet
+                      pip install mock
+                      pip install pytest-asyncio
+                      pip install -r requirements.txt
+              - step:
+                  type: Run
+                  name: Run tests
+                  identifier: Run_tests
+                  spec:
+                    shell: Sh
+                    command: cd tests; pytest -v
