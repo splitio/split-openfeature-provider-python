@@ -31,11 +31,11 @@ pipeline:
             steps:
               - step:
                   type: Run
-                  name: Install Python 3.9
+                  name: Install Python 3_9
                   identifier: Install_Python_39
                   spec:
                     shell: Sh
-                    command: |
+                    command: |-
                       # Update package list
                       sudo apt-get update
 
@@ -47,7 +47,10 @@ pipeline:
                       sudo apt-get update
 
                       # Install Python 3.9 and pip
-                      sudo apt-get install -y python3.9 python3.9-pip python3.9-venv python3.9-dev
+                      sudo apt-get install -y python3.9 python3.9-venv python3.9-dev
+
+                      curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+                      python3.9 get-pip.py
 
                       # Create symlinks for easier access
                       sudo ln -sf /usr/bin/python3.9 /usr/bin/python3
