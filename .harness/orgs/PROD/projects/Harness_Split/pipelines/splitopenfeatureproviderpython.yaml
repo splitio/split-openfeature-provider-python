@@ -85,15 +85,14 @@ pipeline:
                     command: cd tests; pytest -v
               - step:
                   type: Semgrep
-                  name: Semgrep_1
+                  name: Security scan
                   identifier: Semgrep_1
                   spec:
+                    mode: orchestration
+                    config: default
                     target:
-                      detection: auto
                       type: repository
+                      detection: auto
                     advanced:
                       log:
                         level: info
-                      args: {}
-                    mode: orchestration
-                    config: default
