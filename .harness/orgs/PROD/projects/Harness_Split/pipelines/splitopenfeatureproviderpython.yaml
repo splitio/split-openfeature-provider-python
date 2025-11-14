@@ -96,3 +96,20 @@ pipeline:
                     advanced:
                       log:
                         level: info
+              - step:
+                  type: Sonarqube
+                  name: Sonarqube
+                  identifier: Sonarqube
+                  spec:
+                    mode: orchestration
+                    config: default
+                    target:
+                      type: repository
+                      detection: auto
+                    advanced:
+                      log:
+                        level: info
+                    auth:
+                      access_token: <+secrets.getValue("sonarqube-token")>
+                      domain: https://sonar.harness.io/
+                      ssl: true
