@@ -1,0 +1,14 @@
+inputSet:
+  name: mytrigger
+  identifier: mytrigger
+  orgIdentifier: PROD
+  projectIdentifier: Harness_Split
+  pipeline:
+    identifier: splitopenfeatureproviderpython
+    properties:
+      ci:
+        codebase:
+          build:
+            type: PR
+            spec:
+              number: <+trigger.prNumber>
