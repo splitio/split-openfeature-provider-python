@@ -1,0 +1,34 @@
+trigger:
+  name: "github "
+  identifier: github
+  enabled: true
+  stagesToExecute: []
+  description: ""
+  tags: {}
+  encryptedWebhookSecretIdentifier: ""
+  orgIdentifier: PROD
+  projectIdentifier: Harness_Split
+  pipelineIdentifier: splitopenfeatureproviderpython
+  source:
+    type: Webhook
+    spec:
+      type: Github
+      spec:
+        type: PullRequest
+        spec:
+          connectorRef: fmegithubharnessgitops
+          autoAbortPreviousExecutions: false
+          payloadConditions:
+            - key: targetBranch
+              operator: Equals
+              value: harness-pipeline
+            - key: sourceBranch
+              operator: Equals
+              value: removed-git-workflow
+          headerConditions: []
+          repoName: split-openfeature-provider-python
+          actions:
+            - Open
+  pipelineBranchName: <+trigger.branch>
+  inputSetRefs:
+    - mytrigger
