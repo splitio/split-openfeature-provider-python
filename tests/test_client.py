@@ -38,8 +38,8 @@ class TestClient(object):
 
     def _destroy_factory(self):
         self.provider._split_client_wrapper._factory.destroy()
-        assert self.provider._split_client_wrapper._factory.destroyed        
-        
+        assert self.provider._split_client_wrapper._factory.destroyed
+
     def test_use_default(self, client):
         # flags that do not exist should return the default value
         flag_name = "random-non-existent-feature"
@@ -64,7 +64,7 @@ class TestClient(object):
         default_obj = {"foo": "bar"}
         result = client.get_object_value(flag_name, default_obj)
         assert result == default_obj
-        
+
     def test_missing_targeting_key(self, client):
         # Split requires a targeting key and should return the default treatment
         # and throw an error if not provided
@@ -185,8 +185,8 @@ class TestClient(object):
         assert details.reason == Reason.ERROR
         assert details.variant is None
         self._destroy_factory()
-    
+
 class TestClientInternal(TestClient):
     @pytest.fixture
     def provider(self):
-        return SplitProvider({"SdkKey": "localhost", "ConfigOptions": {"splitFile": "split.yaml"}})    
+        return SplitProvider({"SdkKey": "localhost", "ConfigOptions": {"splitFile": "split.yaml"}})

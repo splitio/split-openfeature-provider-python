@@ -1,6 +1,6 @@
 [run]
 source =
-    splitio/
+    split_openfeature_provider/
 
 omit =
     tests/*

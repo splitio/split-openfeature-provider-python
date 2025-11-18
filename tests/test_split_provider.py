@@ -267,7 +267,7 @@ class TestProvider(object):
             assert e.error_code == ErrorCode.PARSE_ERROR
         except Exception:
             fail("Unexpected exception occurred")
-            
+
     def test_sdk_not_ready(self):
         provider = SplitProvider({"ReadyBlockTime": 0.1,"SdkKey": "api"})
         details = provider.resolve_boolean_details(self.flag_name, False, self.eval_context)
@@ -281,11 +281,11 @@ class TestProviderAsync(object):
     async def reset_client(self):
         self.client = MagicMock()
         self._factory = self.client._factory
-        
+
         async def block_until_ready(x):
             pass
         self._factory.block_until_ready = block_until_ready
-        
+
         self.provider = SplitProviderAsync({"SplitClient": self.client})
         await self.provider.create()
 
@@ -568,7 +568,7 @@ class TestProviderAsync(object):
             assert e.error_code == ErrorCode.PARSE_ERROR
         except Exception:
             fail("Unexpected exception occurred")
-            
+
     @pytest.mark.asyncio
     async def test_sdk_not_ready(self):
         provider = SplitProviderAsync({"ReadyBlockTime": 0.1,"SdkKey": "api"})
