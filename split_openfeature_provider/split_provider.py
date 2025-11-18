@@ -26,7 +26,7 @@ class SplitProviderBase(AbstractProvider):
         if not self._split_client_wrapper.is_sdk_ready():
             return SplitProvider.construct_flag_resolution(default_value, None, None, Reason.ERROR,
                                                                ErrorCode.PROVIDER_NOT_READY)
-        
+
         targeting_key = evaluation_context.targeting_key
         if not targeting_key:
             raise TargetingKeyMissingError("Missing targeting key")
@@ -42,12 +42,12 @@ class SplitProviderBase(AbstractProvider):
             if evaluated != None:
                 treatment = evaluated[0]
                 config = evaluated[1]
-                
+
             if SplitProvider.no_treatment(treatment) or treatment == "control":
                 return SplitProvider.construct_flag_resolution(default_value, treatment, None, Reason.DEFAULT,
                                                                ErrorCode.FLAG_NOT_FOUND)
             value = treatment
-            try: 
+            try:
                 if type(default_value) is int:
                     value = int(treatment)
                 elif isinstance(default_value, float):
@@ -62,22 +62,22 @@ class SplitProviderBase(AbstractProvider):
                         raise ParseError
                 elif isinstance(default_value, dict):
                     value = json.loads(treatment)
-                    
+
             except Exception:
                 raise ParseError
-            
+
             return SplitProvider.construct_flag_resolution(value, treatment, config)
-        
+
         except ParseError as ex:
             _LOGGER.error("Evaluation Parse error")
             _LOGGER.debug(ex)
-            raise ParseError("Could not convert treatment")            
+            raise ParseError("Could not convert treatment")
 
         except OpenFeatureError as ex:
             _LOGGER.error("Evaluation OpenFeature Exception")
             _LOGGER.debug(ex)
             raise
-        
+
         except Exception as ex:
             _LOGGER.error("Evaluation Exception")
             _LOGGER.debug(ex)
@@ -94,13 +94,13 @@ class SplitProviderBase(AbstractProvider):
     @staticmethod
     def construct_flag_resolution(value, variant, config, reason: Reason = Reason.TARGETING_MATCH,
                                   error_code: ErrorCode = None):
-        return FlagResolutionDetails(value=value, error_code=error_code, reason=reason, variant=variant, 
+        return FlagResolutionDetails(value=value, error_code=error_code, reason=reason, variant=variant,
                                      flag_metadata={"config": config})
 
     def resolve_boolean_details(self, flag_key: str, default_value: bool,
                                 evaluation_context: EvaluationContext = EvaluationContext()):
         pass
-    
+
     def resolve_string_details(self, flag_key: str, default_value: str,
                                evaluation_context: EvaluationContext = EvaluationContext()):
         pass
@@ -127,7 +127,7 @@ class SplitProviderBase(AbstractProvider):
     async def resolve_integer_details_async(self, flag_key: str, default_value: int,
                                 evaluation_context: EvaluationContext = EvaluationContext()):
         pass
-    
+
     async def resolve_float_details_async(self, flag_key: str, default_value: float,
                               evaluation_context: EvaluationContext = EvaluationContext()):
         pass
@@ -159,7 +159,7 @@ class SplitProvider(SplitProviderBase):
     def resolve_object_details(self, flag_key: str, default_value: dict,
                                evaluation_context: EvaluationContext = EvaluationContext()):
         return self._evaluate_treatment(flag_key, evaluation_context, default_value)
-        
+
 class SplitProviderAsync(SplitProviderBase):
     def __init__(self, initial_context):
         if isinstance(initial_context, dict):
@@ -168,7 +168,7 @@ class SplitProviderAsync(SplitProviderBase):
 
     async def create(self):
         await self._split_client_wrapper.create()
-        
+
     async def resolve_boolean_details_async(self, flag_key: str, default_value: bool,
                                 evaluation_context: EvaluationContext = EvaluationContext()):
         return await self._evaluate_treatment_async(flag_key, evaluation_context, default_value)
@@ -196,7 +196,7 @@ class SplitProviderAsync(SplitProviderBase):
         if not await self._split_client_wrapper.is_sdk_ready_async():
             return SplitProvider.construct_flag_resolution(default_value, None, None, Reason.ERROR,
                                                                ErrorCode.PROVIDER_NOT_READY)
-        
+
         targeting_key = evaluation_context.targeting_key
         if not targeting_key:
             raise TargetingKeyMissingError("Missing targeting key")

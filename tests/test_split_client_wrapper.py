@@ -13,7 +13,7 @@ class TestSplitClientWrapper(unittest.TestCase):
         wrapper = SplitClientWrapper({"SplitClient": split_client})
         assert wrapper.split_client != None
         assert wrapper.is_sdk_ready()
-        
+
         destroy_event = Event()
         wrapper.destroy(destroy_event)
         destroy_event.wait()
@@ -30,7 +30,7 @@ class TestSplitClientWrapper(unittest.TestCase):
         assert wrapper._factory.destroyed
 
     def test_sdk_not_ready(self):
-        wrapper = SplitClientWrapper({"ReadyBlockTime": 0.1, "SdkKey": "api", "ConfigOptions": {}})        
+        wrapper = SplitClientWrapper({"ReadyBlockTime": 0.1, "SdkKey": "api", "ConfigOptions": {}})
         assert not wrapper.is_sdk_ready()
         wrapper.destroy()
 
@@ -75,7 +75,7 @@ class TestSplitClientWrapperAsync(object):
 
     @pytest.mark.asyncio
     async def test_sdk_not_ready_async(self):
-        wrapper = SplitClientWrapper({"ReadyBlockTime": 0.1, "SdkKey": "api", "ConfigOptions": {}, "ThreadingMode": "asyncio"})        
+        wrapper = SplitClientWrapper({"ReadyBlockTime": 0.1, "SdkKey": "api", "ConfigOptions": {}, "ThreadingMode": "asyncio"})
         await wrapper.create()
         assert not await wrapper.is_sdk_ready_async()
         await wrapper.destroy_async()
