@@ -1,2 +1,4 @@
+1.0.0
+- Deprecation. Please use split-openfeature-provider.
 0.0.1
 - First release. Up to date with spec 0.5.1 and python sdk 0.0.6

@@ -12,7 +12,7 @@ This SDK is compatible with Python 3 and higher.
 ## Getting started
 ### Pip Installation 
 ```python
-pip install split-openfeature==0.0.1
+pip install split-openfeature==1.0.0
 ```
 ### Configure it
 Below is a simple example that describes using the Split Provider. Please see the [OpenFeature Documentation](https://docs.openfeature.dev/docs/reference/concepts/evaluation-api) for details on how to use the OpenFeature SDK.
