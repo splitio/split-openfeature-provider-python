@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.1",
     author="Robert Grassian",
     author_email="robert.grassian@split.io",
-    description="The official Python Split Provider for OpenFeature",
+    description="Deprecated Python Split Provider for OpenFeature. Please use split-openfeature-provider.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
