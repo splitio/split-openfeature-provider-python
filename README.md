@@ -5,7 +5,8 @@
 This Provider is designed to allow the use of OpenFeature with Split, the platform for controlled rollouts, serving features to your users via the Split feature flag to manage your complete customer experience.
 
 ## Compatibility
-This SDK is compatible with Python 3.9 and higher.
+- Python 3.9 and higher.
+- **Split SDK**: [Split Python SDK](https://github.com/splitio/python-client) **10.5.1 or later**. Provider lifecycle events (PROVIDER_READY, PROVIDER_CONFIGURATION_CHANGED, PROVIDER_ERROR) require **10.6.0 or later**; on 10.5.1 the provider works without emitting those events.
 
 ## Getting started
 
@@ -13,7 +14,7 @@ This package replaces the previous `split-openfeature-provider` Python provider 
 
 ### Pip Installation
 ```python
-pip install split-openfeature-provider==1.0.0
+pip install split-openfeature-provider==1.1.0
 ```
 ### Configure it
 Below is a simple example that describes using the Split Provider. Please see the [OpenFeature Documentation](https://docs.openfeature.dev/docs/reference/concepts/evaluation-api) for details on how to use the OpenFeature SDK.
