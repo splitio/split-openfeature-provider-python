@@ -66,7 +66,7 @@ class SplitClientWrapper():
             self.sdk_ready = True
         except TimeoutException:
             _LOGGER.debug("Split SDK timed out")
-            self._notify_receiver(SPLIT_EVENT_BUR_TIMEOUT, None)
+            await self._notify_receiver_async(SPLIT_EVENT_BUR_TIMEOUT, None)
 
         self.split_client = self._factory.client()
         await self._register_split_events_async()
@@ -104,6 +104,16 @@ class SplitClientWrapper():
         except Exception as ex:
             _LOGGER.debug("Split event callback error: %s", ex)
 
+    async def _notify_receiver_async(self, split_event, event_metadata):
+        """Async version for use when the receiver is used in asyncio context (e.g. async event registration)."""
+        if self._event_receiver is None:
+            _LOGGER.debug("Split event %s: no receiver registered", split_event)
+            return
+        try:
+            await self._event_receiver._on_split_event_async(split_event, event_metadata)
+        except Exception as ex:
+            _LOGGER.debug("Split event callback error: %s", ex)
+
     def _register_split_events(self):
         if self._factory is None:
             _LOGGER.warning("SplitClientWrapper: _factory is None, cannot register for SDK events")
@@ -131,8 +141,12 @@ class SplitClientWrapper():
         try:
             em = self._factory._events_manager
             if hasattr(em, "register"):
-                await em.register(SdkEvent.SDK_READY, lambda m: self._notify_receiver(SdkEvent.SDK_READY, m))
-                await em.register(SdkEvent.SDK_UPDATE, lambda m: self._notify_receiver(SdkEvent.SDK_UPDATE, m))
+                async def handler_ready(m):
+                    await self._notify_receiver_async(SdkEvent.SDK_READY, m)
+                async def handler_update(m):
+                    await self._notify_receiver_async(SdkEvent.SDK_UPDATE, m)
+                await em.register(SdkEvent.SDK_READY, handler_ready)
+                await em.register(SdkEvent.SDK_UPDATE, handler_update)
         except Exception as ex:
             _LOGGER.debug("Could not register Split events: %s", ex)
 
