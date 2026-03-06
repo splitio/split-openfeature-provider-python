@@ -71,9 +71,12 @@ class SplitProviderBase(AbstractProvider):
         self._split_client_wrapper.unregister_for_split_events()
         super().detach()
 
-    def _on_split_event(self, split_event, event_metadata):
-        """Map Split SDK events to OpenFeature provider events with OpenFeature-friendly details."""
-        _LOGGER.debug("SplitProvider: _on_split_event received %s", split_event)
+    def _handle_split_event(self, split_event, event_metadata):
+        """
+        Handle Split SDK events and emit corresponding OpenFeature provider events.
+        Shared logic for both sync and async event handlers.
+        """
+        _LOGGER.debug("SplitProvider: received split event %s", split_event)
         if split_event == SPLIT_EVENT_BUR_TIMEOUT:
             self.emit_provider_error(ProviderEventDetails(
                 message="Block until ready timed out",
@@ -96,30 +99,13 @@ class SplitProviderBase(AbstractProvider):
             _LOGGER.info("SplitProvider: emitting PROVIDER_CONFIGURATION_CHANGED flags_changed=%s", flags_changed)
             self.emit_provider_configuration_changed(details)
 
+    def _on_split_event(self, split_event, event_metadata):
+        """Map Split SDK events to OpenFeature provider events (sync path)."""
+        self._handle_split_event(split_event, event_metadata)
+
     async def _on_split_event_async(self, split_event, event_metadata):
-        """Async version for asyncio path; same logic as _on_split_event (emit_* are sync)."""
-        _LOGGER.debug("SplitProvider: _on_split_event_async received %s", split_event)
-        if split_event == SPLIT_EVENT_BUR_TIMEOUT:
-            self.emit_provider_error(ProviderEventDetails(
-                message="Block until ready timed out",
-                error_code=ErrorCode.PROVIDER_NOT_READY,
-                metadata=_metadata_from_split(split_event, event_metadata),
-            ))
-            return
-        if SdkEvent is None:
-            return
-        if split_event == SdkEvent.SDK_READY:
-            self.emit_provider_ready(ProviderEventDetails(
-                metadata=_metadata_from_split(split_event, event_metadata),
-            ))
-        elif split_event == SdkEvent.SDK_UPDATE:
-            flags_changed = _flags_changed_from_sdk_update(event_metadata)
-            details = ProviderEventDetails(
-                flags_changed=flags_changed,
-                metadata=_metadata_from_split(split_event, event_metadata),
-            )
-            _LOGGER.info("SplitProvider: emitting PROVIDER_CONFIGURATION_CHANGED flags_changed=%s", flags_changed)
-            self.emit_provider_configuration_changed(details)
+        """Map Split SDK events to OpenFeature provider events (async path)."""
+        self._handle_split_event(split_event, event_metadata)
 
     def get_provider_hooks(self) -> typing.List[Hook]:
         return []
