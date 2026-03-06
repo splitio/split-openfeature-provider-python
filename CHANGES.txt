@@ -1,5 +1,9 @@
 CHANGES
 
+1.1.0 (Mar 6 2026)
+- Split SDK 10.5.1 remains supported. Provider lifecycle events (PROVIDER_READY, PROVIDER_CONFIGURATION_CHANGED, PROVIDER_ERROR) require Split SDK 10.6.0 or later; on 10.5.1 the provider works as before without emitting those events.
+- Provider now emits OpenFeature provider events (PROVIDER_READY, PROVIDER_CONFIGURATION_CHANGED, PROVIDER_ERROR) when Split SDK 10.6+ fires ready/update/timeout. Event details include OpenFeature-friendly metadata (see docs/EVENTS_MAPPING.md).
+
 1.0.0 (Nov 10 2025)
 - BREAKING CHANGE: Passing the SplitClient object to Provider constructor is now only through the initialization context dictionary
 - BREAKING CHANGE: Provider will throw exception when ObjectDetail and ObjectValue evaluation is used, since it will attempt to parse the treatment as a JSON structure.

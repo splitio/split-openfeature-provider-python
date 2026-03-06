@@ -7,14 +7,105 @@ from openfeature.evaluation_context import EvaluationContext
 from openfeature.exception import ErrorCode, GeneralError, ParseError, OpenFeatureError, TargetingKeyMissingError
 from openfeature.flag_evaluation import Reason, FlagResolutionDetails
 from openfeature.provider import AbstractProvider, Metadata
-from split_openfeature_provider.split_client_wrapper import SplitClientWrapper
+from openfeature.event import ProviderEventDetails
+from split_openfeature_provider.split_client_wrapper import SplitClientWrapper, SPLIT_EVENT_BUR_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
+
+try:
+    from splitio.models.events import SdkEvent
+except ImportError:
+    SdkEvent = None  # type: ignore
+
+
+def _flags_changed_from_sdk_update(event_metadata):
+    """
+    Extract list of updated flag/split names from Split SDK_UPDATE event metadata.
+    OpenFeature expects flags_changed: list[str] for PROVIDER_CONFIGURATION_CHANGED.
+    Handles: dict with "names", object with .metadata, or object with get_names() (Split EventsMetadata).
+    """
+    if event_metadata is None:
+        return None
+    if hasattr(event_metadata, "metadata") and getattr(event_metadata, "metadata", None) is not None:
+        event_metadata = getattr(event_metadata, "metadata")
+    if isinstance(event_metadata, dict):
+        val = event_metadata.get("names")
+        if isinstance(val, list):
+            return [str(x) for x in val if x is not None]
+        return None
+    if hasattr(event_metadata, "get_names"):
+        names = event_metadata.get_names()
+        if names is not None:
+            return [str(x) for x in names if x is not None]
+    return None
+
+
+def _metadata_from_split(split_event, event_metadata):
+    """Build OpenFeature event metadata dict from Split event (and optional Split metadata)."""
+    meta = {"split_event": getattr(split_event, "value", str(split_event))}
+    if event_metadata is not None and isinstance(event_metadata, dict):
+        for k, v in event_metadata.items():
+            if isinstance(v, (bool, str, int, float)):
+                meta["split_%s" % k] = v
+    # Split may pass an object with get_type/get_names (e.g. EventsMetadata)
+    if event_metadata is not None and hasattr(event_metadata, "get_type"):
+        t = event_metadata.get_type()
+        meta["split_type"] = getattr(t, "value", str(t))
+    if event_metadata is not None and hasattr(event_metadata, "get_names"):
+        names = event_metadata.get_names()
+        meta["split_names"] = list(names) if names is not None else []
+    return meta
+
 
 class SplitProviderBase(AbstractProvider):
 
     def get_metadata(self) -> Metadata:
         return Metadata("Split")
+
+    def attach(self, on_emit):
+        super().attach(on_emit)
+        self._split_client_wrapper.set_event_receiver(self)
+        self._split_client_wrapper.register_for_split_events()
+
+    def detach(self):
+        self._split_client_wrapper.unregister_for_split_events()
+        super().detach()
+
+    def _handle_split_event(self, split_event, event_metadata):
+        """
+        Handle Split SDK events and emit corresponding OpenFeature provider events.
+        Shared logic for both sync and async event handlers.
+        """
+        _LOGGER.debug("SplitProvider: received split event %s", split_event)
+        if split_event == SPLIT_EVENT_BUR_TIMEOUT:
+            self.emit_provider_error(ProviderEventDetails(
+                message="Block until ready timed out",
+                error_code=ErrorCode.PROVIDER_NOT_READY,
+                metadata=_metadata_from_split(split_event, event_metadata),
+            ))
+            return
+        if SdkEvent is None:
+            return
+        if split_event == SdkEvent.SDK_READY:
+            self.emit_provider_ready(ProviderEventDetails(
+                metadata=_metadata_from_split(split_event, event_metadata),
+            ))
+        elif split_event == SdkEvent.SDK_UPDATE:
+            flags_changed = _flags_changed_from_sdk_update(event_metadata)
+            details = ProviderEventDetails(
+                flags_changed=flags_changed,
+                metadata=_metadata_from_split(split_event, event_metadata),
+            )
+            _LOGGER.info("SplitProvider: emitting PROVIDER_CONFIGURATION_CHANGED flags_changed=%s", flags_changed)
+            self.emit_provider_configuration_changed(details)
+
+    def _on_split_event(self, split_event, event_metadata):
+        """Map Split SDK events to OpenFeature provider events (sync path)."""
+        self._handle_split_event(split_event, event_metadata)
+
+    async def _on_split_event_async(self, split_event, event_metadata):
+        """Map Split SDK events to OpenFeature provider events (async path)."""
+        self._handle_split_event(split_event, event_metadata)
 
     def get_provider_hooks(self) -> typing.List[Hook]:
         return []

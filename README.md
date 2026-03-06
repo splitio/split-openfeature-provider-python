@@ -5,7 +5,8 @@
 This Provider is designed to allow the use of OpenFeature with Split, the platform for controlled rollouts, serving features to your users via the Split feature flag to manage your complete customer experience.
 
 ## Compatibility
-This SDK is compatible with Python 3.9 and higher.
+- Python 3.9 and higher.
+- **Split SDK**: [Split Python SDK](https://github.com/splitio/python-client) **10.5.1 or later**. Provider lifecycle events (PROVIDER_READY, PROVIDER_CONFIGURATION_CHANGED, PROVIDER_ERROR) require **10.6.0 or later**; on 10.5.1 the provider works without emitting those events.
 
 ## Getting started
 
@@ -13,7 +14,7 @@ This package replaces the previous `split-openfeature-provider` Python provider 
 
 ### Pip Installation
 ```python
-pip install split-openfeature-provider==1.0.0
+pip install split-openfeature-provider==1.1.0
 ```
 ### Configure it
 Below is a simple example that describes using the Split Provider. Please see the [OpenFeature Documentation](https://docs.openfeature.dev/docs/reference/concepts/evaluation-api) for details on how to use the OpenFeature SDK.
@@ -22,7 +23,7 @@ Below is a simple example that describes using the Split Provider. Please see th
 from openfeature import api
 from split_openfeature_provider import SplitProvider
 config = {
-      'impressionsMode': 'OPTIMIZED',
+      'impressionsMode': 'optimized',
       'impressionsRefreshRate': 30,
     }
 provider = SplitProvider({"SdkKey": "YOUR_API_KEY", "ConfigOptions": config, "ReadyBlockTime": 5})
@@ -36,13 +37,41 @@ from split_openfeature_provider import SplitProvider
 from splitio import get_factory
 
 config = {
-      'impressionsMode': 'OPTIMIZED',
+      'impressionsMode': 'optimized',
       'impressionsRefreshRate': 30,
     }
 factory = get_factory("YOUR_API_KEY", config=config)
 factory.block_until_ready(5)
 api.set_provider(SplitProvider({"SplitClient": factory.client()}))
 ```
+
+## Example
+
+A minimal end-to-end example (sync): initialize the provider, set a targeting context, and evaluate a flag.
+
+```python
+from openfeature import api
+from openfeature.evaluation_context import EvaluationContext
+from split_openfeature_provider import SplitProvider
+
+# Initialize with your SDK key (or use "localhost" + splitFile for local YAML)
+provider = SplitProvider({
+    "SdkKey": "YOUR_API_KEY",
+    "ConfigOptions": {"impressionsMode": "optimized"},
+    "ReadyBlockTime": 5,
+})
+api.set_provider(provider)
+
+# Get a client and set targeting context
+client = api.get_client()
+client.context = EvaluationContext(targeting_key="user-123")
+
+# Evaluate flags
+show_new_ui = client.get_boolean_value("my_feature_flag", False)
+print("show_new_ui:", show_new_ui)
+```
+
+With **asyncio**, use `SplitProviderAsync`, `await provider.create()`, and `await client.get_boolean_value_async(...)` as shown in the Asyncio mode section below.
 
 ## Use of OpenFeature with Split
 After the initial setup you can use OpenFeature according to their [documentation](https://docs.openfeature.dev/docs/reference/concepts/evaluation-api/).
@@ -77,10 +106,10 @@ Example below shows using the provider in asyncio
 from openfeature import api
 from split_openfeature_provider import SplitProviderAsync
 config = {
-      'impressionsMode': 'OPTIMIZED',
+      'impressionsMode': 'optimized',
       'impressionsRefreshRate': 30,
     }
-provider = SplitProvider({"SdkKey": "YOUR_API_KEY", "ConfigOptions": config, "ReadyBlockTime": 5})
+provider = SplitProviderAsync({"SdkKey": "YOUR_API_KEY", "ConfigOptions": config, "ReadyBlockTime": 5})
 await provider.create()
 api.set_provider(provider)
 ```
@@ -92,7 +121,7 @@ from split_openfeature_provider import SplitProviderAsync
 from splitio import get_factory_async
 
 config = {
-      'impressionsMode': 'OPTIMIZED',
+      'impressionsMode': 'optimized',
       'impressionsRefreshRate': 30,
     }
 factory = get_factory_async("YOUR_API_KEY", config=config)
