@@ -75,7 +75,7 @@ pipeline:
                     stageStatus: Success
                     condition: <+matrix.pythonVersion> == "3.9.13" && <+codebase.build.type> == "branch"
                   spec:
-                    shell: Sh
+                    shell: Bash
                     command: |-
                       export PATH="$HOME/.local/bin:$PATH"
                       eval "$(mise activate bash)"
@@ -104,7 +104,7 @@ pipeline:
                     stageStatus: Success
                     condition: <+matrix.pythonVersion> == "3.9.13" && <+codebase.build.type> == "PR"
                   spec:
-                    shell: Sh
+                    shell: Bash
                     command: |-
                       export PATH="$HOME/.local/bin:$PATH"
                       eval "$(mise activate bash)"
