@@ -1,6 +1,6 @@
 inputSet:
-  identifier: splitopenfeatureproviderpyinputset
   name: splitopenfeatureproviderpyinputset
+  identifier: splitopenfeatureproviderpyinputset
   orgIdentifier: PROD
   projectIdentifier: Harness_Split
   pipeline:
