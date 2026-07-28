@@ -39,6 +39,7 @@ pipeline:
                     command: |-
                       curl https://mise.run | sh
                       export PATH="$HOME/.local/bin:$PATH"
+                      export MISE_PYTHON_GITHUB_ATTESTATIONS=false
                       mise use --global python@<+matrix.pythonVersion>
                       eval "$(mise activate bash)"
                       python --version
