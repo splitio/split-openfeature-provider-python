@@ -1,0 +1,133 @@
+pipeline:
+  name: split-openfeature-provider-python
+  identifier: splitopenfeatureproviderpy
+  projectIdentifier: Harness_Split
+  orgIdentifier: PROD
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: fmegithubharnessgitops
+        repoName: split-openfeature-provider-python
+        build: <+input>
+  stages:
+    - stage:
+        name: Build and Test
+        identifier: Build_and_Test
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec:
+              size: flex
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Install Python
+                  identifier: Install_Python
+                  spec:
+                    shell: Bash
+                    command: |-
+                      curl https://mise.run | sh
+                      export PATH="$HOME/.local/bin:$PATH"
+                      export MISE_PYTHON_GITHUB_ATTESTATIONS=false
+                      mise use --global python@<+matrix.pythonVersion>
+                      eval "$(mise activate bash)"
+                      python --version
+                      pip --version
+              - step:
+                  type: Run
+                  name: Install Dependencies
+                  identifier: Install_Dependencies
+                  spec:
+                    shell: Bash
+                    command: |-
+                      export PATH="$HOME/.local/bin:$PATH"
+                      eval "$(mise activate bash)"
+                      pip install -U setuptools pip wheel
+                      pip install -e .
+                      pip install -r requirements-dev.txt
+              - step:
+                  type: Run
+                  name: Run Tests
+                  identifier: Run_Tests
+                  spec:
+                    shell: Bash
+                    command: |-
+                      export PATH="$HOME/.local/bin:$PATH"
+                      eval "$(mise activate bash)"
+                      cd tests
+                      pytest -v --cov=split_openfeature_provider --cov-report=xml:../coverage.xml
+              - step:
+                  type: Run
+                  name: SonarQube Scan Push
+                  identifier: SonarQube_Scan_Push
+                  when:
+                    stageStatus: Success
+                    condition: <+matrix.pythonVersion> == "3.9.13" && <+codebase.build.type> == "branch"
+                  spec:
+                    shell: Bash
+                    command: |-
+                      export PATH="$HOME/.local/bin:$PATH"
+                      eval "$(mise activate bash)"
+                      VERSION=$(python3 -c "import re; print(re.search(r'version\s*=\s*[\"\\']([^\"\\']+)[\"\\']', open('setup.py').read()).group(1))")
+                      echo "Detected version: $VERSION"
+                      export SONAR_SCANNER_VERSION=5.0.1.3006
+                      curl -sSLo sonar-scanner.zip \
+                        "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip"
+                      unzip -q sonar-scanner.zip
+                      export PATH="$PWD/sonar-scanner-${SONAR_SCANNER_VERSION}-linux/bin:$PATH"
+                      apt-get install -y openjdk-17-jdk -qq
+                      sonar-scanner \
+                        -Dsonar.projectKey=split-openfeature-provider-python \
+                        -Dsonar.sources=split_openfeature_provider \
+                        -Dsonar.tests=tests \
+                        -Dsonar.host.url=https://sonar.harness.io \
+                        -Dsonar.token=<+secrets.getValue("sonarqube-token")> \
+                        -Dsonar.python.coverage.reportPaths=coverage.xml \
+                        -Dsonar.projectVersion=$VERSION \
+                        -Dsonar.branch.name=<+codebase.branch>
+              - step:
+                  type: Run
+                  name: SonarQube Scan PR
+                  identifier: SonarQube_Scan_PR
+                  when:
+                    stageStatus: Success
+                    condition: <+matrix.pythonVersion> == "3.9.13" && <+codebase.build.type> == "PR"
+                  spec:
+                    shell: Bash
+                    command: |-
+                      export PATH="$HOME/.local/bin:$PATH"
+                      eval "$(mise activate bash)"
+                      VERSION=$(python3 -c "import re; print(re.search(r'version\s*=\s*[\"\\']([^\"\\']+)[\"\\']', open('setup.py').read()).group(1))")
+                      echo "Detected version: $VERSION"
+                      export SONAR_SCANNER_VERSION=5.0.1.3006
+                      curl -sSLo sonar-scanner.zip \
+                        "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip"
+                      unzip -q sonar-scanner.zip
+                      export PATH="$PWD/sonar-scanner-${SONAR_SCANNER_VERSION}-linux/bin:$PATH"
+                      apt-get install -y openjdk-17-jdk -qq
+                      sonar-scanner \
+                        -Dsonar.projectKey=split-openfeature-provider-python \
+                        -Dsonar.sources=split_openfeature_provider \
+                        -Dsonar.tests=tests \
+                        -Dsonar.host.url=https://sonar.harness.io \
+                        -Dsonar.token=<+secrets.getValue("sonarqube-token")> \
+                        -Dsonar.python.coverage.reportPaths=coverage.xml \
+                        -Dsonar.projectVersion=$VERSION \
+                        -Dsonar.pullrequest.key=<+codebase.prNumber> \
+                        -Dsonar.pullrequest.branch=<+codebase.sourceBranch> \
+                        -Dsonar.pullrequest.base=<+codebase.targetBranch>
+        strategy:
+          matrix:
+            pythonVersion:
+              - "3.9.13"
