@@ -53,6 +53,7 @@ pipeline:
                     command: |-
                       export PATH="$HOME/.local/bin:$PATH"
                       eval "$(mise activate bash)"
+                      pip install -U setuptools pip wheel
                       pip install -e .
                       pip install -r requirements-dev.txt
               - step:
@@ -64,7 +65,7 @@ pipeline:
                     command: |-
                       export PATH="$HOME/.local/bin:$PATH"
                       eval "$(mise activate bash)"
-                      cd split_openfeature_provider
+                      cd tests
                       pytest -v --cov=split_openfeature_provider --cov-report=xml:../coverage.xml
               - step:
                   type: Run
