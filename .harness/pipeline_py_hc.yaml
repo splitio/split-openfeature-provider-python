@@ -1,0 +1,92 @@
+pipeline:
+  name: split-openfeature-provider-python hc
+  identifier: splitopenfeatureproviderpy_hc
+  projectIdentifier: Harness_Split
+  orgIdentifier: PROD
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        repoName: split-openfeature-provider-python
+        build: <+input>
+  stages:
+    - stage:
+        name: Build and Test
+        identifier: Build_and_Test
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          envVariables:
+            CI_ENABLE_HCLI_FOR_TESTS: "true"
+          caching:
+            enabled: true
+            override: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec:
+              size: flex
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Install Python
+                  identifier: Install_Python
+                  spec:
+                    shell: Bash
+                    command: |-
+                      curl https://mise.run | sh
+                      export PATH="$HOME/.local/bin:$PATH"
+                      export MISE_PYTHON_GITHUB_ATTESTATIONS=false
+                      mise use --global python@<+matrix.pythonVersion>
+                      eval "$(mise activate bash)"
+                      python --version
+                      pip --version
+              - step:
+                  type: Run
+                  name: Install Dependencies
+                  identifier: Install_Dependencies
+                  spec:
+                    shell: Bash
+                    command: |-
+                      export PATH="$HOME/.local/bin:$PATH"
+                      eval "$(mise activate bash)"
+                      pip install -U setuptools pip wheel
+                      pip install -e .
+                      pip install -r requirements-dev.txt
+              - step:
+                  type: Run
+                  name: Run Tests
+                  identifier: Run_Tests
+                  spec:
+                    shell: Bash
+                    command: |-
+                      export PATH="$HOME/.local/bin:$PATH"
+                      eval "$(mise activate bash)"
+                      cd tests
+                      pytest -v --cov=split_openfeature_provider --cov-report=xml:../coverage.xml
+              - step:
+                  name: harnessCoverage
+                  identifier: harnessCoverage
+                  when:
+                    stageStatus: Success
+                    condition: <+matrix.pythonVersion> == "3.9.13"
+                  template:
+                    templateRef: account.codeCoverage
+                    versionLabel: v1
+                    templateInputs:
+                      type: Run
+                      spec:
+                        envVariables:
+                          patch_coverage_percent: "80"
+                          file_path: "coverage.xml"
+                          overall_coverage_percent: ""
+                          ignore_failure: "true"
+                          exclude: "**/venv/**,**/__pycache__/**,**/test_*.py,**/*_test.py,**/tests/**"
+        strategy:
+          matrix:
+            pythonVersion:
+              - "3.9.13"
