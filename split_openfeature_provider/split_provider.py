@@ -9,8 +9,11 @@ from openfeature.flag_evaluation import Reason, FlagResolutionDetails
 from openfeature.provider import AbstractProvider, Metadata
 from openfeature.event import ProviderEventDetails
 from split_openfeature_provider.split_client_wrapper import SplitClientWrapper, SPLIT_EVENT_BUR_TIMEOUT
+from splitio.client.key import Key
 
 _LOGGER = logging.getLogger(__name__)
+
+BUCKETING_KEY = "bucketingKey"
 
 try:
     from splitio.models.events import SdkEvent
@@ -122,8 +125,9 @@ class SplitProviderBase(AbstractProvider):
         if not targeting_key:
             raise TargetingKeyMissingError("Missing targeting key")
 
+        split_key = SplitProvider.split_key(targeting_key, evaluation_context)
         attributes = SplitProvider.transform_context(evaluation_context)
-        evaluated = self._split_client_wrapper.split_client.get_treatment_with_config(targeting_key, key, attributes)
+        evaluated = self._split_client_wrapper.split_client.get_treatment_with_config(split_key, key, attributes)
         return self._process_treatment(evaluated, default_value)
 
     def _process_treatment(self, evaluated, default_value):
@@ -175,8 +179,24 @@ class SplitProviderBase(AbstractProvider):
             raise GeneralError("Failed to evaluate treatment")
 
     @staticmethod
+    def split_key(targeting_key: str, evaluation_context: EvaluationContext):
+        attributes = evaluation_context.attributes or {}
+        bucketing_key = attributes.get(BUCKETING_KEY)
+        if bucketing_key is None:
+            return targeting_key
+        if not isinstance(bucketing_key, str):
+            _LOGGER.warning("Ignoring bucketingKey: not a string; evaluating with the targeting key only")
+            return targeting_key
+        if not bucketing_key.strip():
+            _LOGGER.warning("Ignoring bucketingKey: blank; evaluating with the targeting key only")
+            return targeting_key
+        return Key(targeting_key, bucketing_key.strip())
+
+    @staticmethod
     def transform_context(evaluation_context: EvaluationContext):
-        return evaluation_context.attributes
+        attributes = dict(evaluation_context.attributes or {})
+        attributes.pop(BUCKETING_KEY, None)
+        return attributes
 
     @staticmethod
     def no_treatment(treatment: str):
@@ -292,6 +312,7 @@ class SplitProviderAsync(SplitProviderBase):
         if not targeting_key:
             raise TargetingKeyMissingError("Missing targeting key")
 
+        split_key = SplitProvider.split_key(targeting_key, evaluation_context)
         attributes = SplitProvider.transform_context(evaluation_context)
-        evaluated = await self._split_client_wrapper.split_client.get_treatment_with_config(targeting_key, key, attributes)
+        evaluated = await self._split_client_wrapper.split_client.get_treatment_with_config(split_key, key, attributes)
         return self._process_treatment(evaluated, default_value)
