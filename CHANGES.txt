@@ -1,5 +1,10 @@
 CHANGES
 
+1.2.0 (Nov 19 2026)
+- Added support for Split bucketing keys: set `bucketingKey` (a non-blank string; surrounding whitespace is trimmed) in the evaluation context and the provider evaluates with `Key(targeting_key, bucketingKey)`. Blank or non-string values are ignored with a warning.
+- BEHAVIOR CHANGE: the `bucketingKey` context attribute is no longer forwarded to Split as a targeting attribute, whether valid or not. Targeting rules on an attribute named `bucketingKey` will no longer match.
+- BEHAVIOR CHANGE: a `bucketingKey` longer than 250 characters is passed to the Split SDK, which rejects it: the evaluation returns `control`, so the provider returns the default value with FLAG_NOT_FOUND.
+
 1.1.0 (Mar 6 2026)
 - Split SDK 10.5.1 remains supported. Provider lifecycle events (PROVIDER_READY, PROVIDER_CONFIGURATION_CHANGED, PROVIDER_ERROR) require Split SDK 10.6.0 or later; on 10.5.1 the provider works as before without emitting those events.
 - Provider now emits OpenFeature provider events (PROVIDER_READY, PROVIDER_CONFIGURATION_CHANGED, PROVIDER_ERROR) when Split SDK 10.6+ fires ready/update/timeout. Event details include OpenFeature-friendly metadata (see docs/EVENTS_MAPPING.md).

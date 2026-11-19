@@ -97,6 +97,13 @@ class TestClient(object):
         result = client.get_boolean_value(self.my_feature, True, evaluation_context=EvaluationContext(targeting_key="randomKey"))
         assert not result
 
+    def test_boolean_with_bucketing_key(self, client):
+        # the whitelist in split.yaml matches on the targeting (matching) key, not on bucketingKey
+        context = EvaluationContext(targeting_key="key", attributes={"bucketingKey": "anything"})
+        details = client.get_boolean_details(self.my_feature, False, evaluation_context=context)
+        assert details.value
+        assert details.error_code is None
+
     def test_string_split(self, client):
         result = client.get_string_value(self.some_other_feature, "on")
         assert result == "off"

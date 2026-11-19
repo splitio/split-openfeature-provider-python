@@ -14,7 +14,7 @@ This package replaces the previous `split-openfeature-provider` Python provider 
 
 ### Pip Installation
 ```python
-pip install split-openfeature-provider==1.1.0
+pip install split-openfeature-provider==1.2.0
 ```
 ### Configure it
 Below is a simple example that describes using the Split Provider. Please see the [OpenFeature Documentation](https://docs.openfeature.dev/docs/reference/concepts/evaluation-api) for details on how to use the OpenFeature SDK.
@@ -97,6 +97,21 @@ context = EvaluationContext(targeting_key="TARGETING_KEY")
 api.set_evaluation_context(context)
 ```
 If the context was set at the client or api level, it is not required to provide it during flag evaluation.
+
+### Bucketing key
+To bucket on a different key than the one used for targeting, set `bucketingKey` in the evaluation context.
+The provider then evaluates with Split's `Key(targeting_key, bucketingKey)`: targeting rules, segments
+and individual targets match on the targeting key, while the percentage rollout uses the bucketing key.
+```python
+context = EvaluationContext(targeting_key="user-123", attributes={"bucketingKey": "account-42"})
+value = client.get_boolean_value("FLAG_NAME", False, context)
+```
+- `bucketingKey` must be a non-blank string; surrounding whitespace is trimmed. Blank or non-string values
+  are ignored with a warning (the targeting key alone is used).
+- `bucketingKey` is reserved: it is never sent to Split as a targeting attribute.
+- A `bucketingKey` longer than 250 characters is rejected by the Split SDK: the evaluation returns
+  `control`, so you get the default value with `FLAG_NOT_FOUND`.
+- A targeting key is still required; `bucketingKey` does not replace it.
 
 ### Asyncio mode
 The provider supports asyncio mode as well, using the asyncio mode in Split SDK.
